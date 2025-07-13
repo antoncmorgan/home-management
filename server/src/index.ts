@@ -1,13 +1,24 @@
 
 import dotenv from 'dotenv';
+
 import express from 'express';
 import cors from 'cors';
+import { initDb } from './db';
 import authRoutes from './authRoutes';
 
 dotenv.config();
 
+
 const app = express();
 const port = process.env.PORT || 3001;
+
+// Initialize DB
+initDb().then(() => {
+  console.log('Database initialized');
+}).catch((err) => {
+  console.error('Failed to initialize database:', err);
+  process.exit(1);
+});
 
 app.use(cors());
 

@@ -1,10 +1,16 @@
 import request from 'supertest';
 import express from 'express';
 import authRoutes from '../src/authRoutes';
+import { initDb } from '../src/db';
+
 
 const app = express();
 app.use(express.json());
 app.use('/api/auth', authRoutes);
+
+beforeAll(async () => {
+  await initDb(':memory:');
+});
 
 describe('Auth Routes', () => {
   it('should register a new user', async () => {

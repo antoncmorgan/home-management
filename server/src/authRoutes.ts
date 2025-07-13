@@ -1,11 +1,12 @@
+
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { createUser, findUserByUsername } from './db';
 
 const router = express.Router();
 
-// In-memory user store (replace with DB in production)
-const users: { username: string; password: string }[] = [];
+// Users are now persisted in SQLite
 
 // Register route
 router.post('/register', async (req, res) => {
@@ -13,19 +14,19 @@ router.post('/register', async (req, res) => {
   if (!username || !password) {
     return res.status(400).json({ message: 'Username and password required' });
   }
-  const existingUser = users.find(u => u.username === username);
+  const existingUser = await findUserByUsername(username);
   if (existingUser) {
     return res.status(409).json({ message: 'User already exists' });
   }
   const hashedPassword = await bcrypt.hash(password, 10);
-  users.push({ username, password: hashedPassword });
+  await createUser(username, hashedPassword);
   res.status(201).json({ message: 'User registered' });
 });
 
 // Login route
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
-  const user = users.find(u => u.username === username);
+  const user = await findUserByUsername(username);
   if (!user) {
     return res.status(401).json({ message: 'Invalid credentials' });
   }
