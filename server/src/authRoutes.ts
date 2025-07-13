@@ -37,4 +37,12 @@ router.post('/login', async (req, res) => {
   res.json({ token });
 });
 
+
+import { requireAuth } from './requireAuth';
+
+// Example protected route
+router.get('/protected', requireAuth, (req, res) => {
+  res.json({ message: `Hello, ${(req as any).user.username}! This is a protected route.` });
+});
+
 export default router;

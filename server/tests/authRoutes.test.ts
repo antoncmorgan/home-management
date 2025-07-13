@@ -1,6 +1,6 @@
 import request from 'supertest';
 import express from 'express';
-import authRoutes from '../authRoutes';
+import authRoutes from '../src/authRoutes';
 
 const app = express();
 app.use(express.json());
@@ -43,5 +43,35 @@ describe('Auth Routes', () => {
       .send({ username: 'nouser', password: 'wrongpass' });
     expect(res.status).toBe(401);
     expect(res.body.message).toBe('Invalid credentials');
+  });
+  it('should access protected route with valid token', async () => {
+    // Register and login to get token
+    await request(app)
+      .post('/api/auth/register')
+      .send({ username: 'protecteduser', password: 'testpass' });
+    const loginRes = await request(app)
+      .post('/api/auth/login')
+      .send({ username: 'protecteduser', password: 'testpass' });
+    const token = loginRes.body.token;
+    const res = await request(app)
+      .get('/api/auth/protected')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.message).toMatch(/Hello, protecteduser/);
+  });
+
+  it('should not access protected route without token', async () => {
+    const res = await request(app)
+      .get('/api/auth/protected');
+    expect(res.status).toBe(401);
+    expect(res.body.message).toBe('No token provided');
+  });
+
+  it('should not access protected route with invalid token', async () => {
+    const res = await request(app)
+      .get('/api/auth/protected')
+      .set('Authorization', 'Bearer invalidtoken');
+    expect(res.status).toBe(403);
+    expect(res.body.message).toBe('Invalid token');
   });
 });
