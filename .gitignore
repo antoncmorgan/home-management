@@ -1,3 +1,6 @@
+# Application files
+data/
+
 # Node
 node_modules/
 .env
