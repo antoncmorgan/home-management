@@ -1,13 +1,11 @@
 
-import dotenv from 'dotenv';
+import 'dotenv/config';
 
 import express from 'express';
 import cors from 'cors';
 import { initDb } from './db';
 import authRoutes from './authRoutes';
 import googleRoutes from './googleRoutes';
-
-dotenv.config();
 
 
 const app = express();

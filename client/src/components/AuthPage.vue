@@ -28,7 +28,7 @@ function onLoginSuccess() {
   router.push('/home');
 }
 function onRegisterSuccess() {
-  tab.value = 'login';
+  router.push('/home');
 }
 </script>
 
