@@ -1,20 +1,21 @@
 <template>
-  <div>
-    <n-button v-if="isLoggedIn" type="primary" @click="connectGoogle" :loading="loading">
-      Connect Google Calendar
-    </n-button>
-    <n-alert v-if="!isLoggedIn" type="info" style="margin-top: 1em;">Please log in to connect your Google Calendar.</n-alert>
-    <n-alert v-if="error" type="error" style="margin-top: 1em;">{{ error }}</n-alert>
-    <div v-if="events.length" style="margin-top: 2em;">
-      <h3>Your Google Calendar Events (This Month):</h3>
-      <ul>
-        <li v-for="event in events" :key="event.id">
-          <strong>{{ event.summary }}</strong>
-          <span v-if="event.start?.dateTime"> — {{ new Date(event.start.dateTime).toLocaleString() }}</span>
-          <span v-else-if="event.start?.date"> — {{ event.start.date }}</span>
-        </li>
-      </ul>
-    </div>
+  <div class="google-calendar-connect">
+    <n-card size="small">
+      <div class="connect-section">
+        <n-button v-if="isLoggedIn" type="primary" @click="connectGoogle" :loading="loading">
+          Connect Google Calendar
+        </n-button>
+        <n-alert v-if="!isLoggedIn" type="info">
+          Please log in to connect your Google Calendar.
+        </n-alert>
+        <n-alert v-if="error" type="error" style="margin-top: 0.5rem;">
+          {{ error }}
+        </n-alert>
+        <div v-if="events.length" class="events-info">
+          <n-tag type="success">{{ events.length }} events loaded</n-tag>
+        </div>
+      </div>
+    </n-card>
   </div>
 </template>
 
@@ -22,7 +23,7 @@
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { apiGet, apiRedirect } from '../api';
-import { useMessage, NButton, NAlert } from 'naive-ui';
+import { useMessage, NButton, NAlert, NCard, NTag } from 'naive-ui';
 
 const loading = ref(false);
 const error = ref('');
@@ -31,6 +32,10 @@ const isLoggedIn = ref(false);
 const route = useRoute();
 const router = useRouter();
 const message = useMessage();
+
+const emit = defineEmits<{
+  eventsUpdated: []
+}>();
 
 function connectGoogle() {
   // Redirect to backend Google auth endpoint with JWT as query param
@@ -49,6 +54,7 @@ async function fetchEvents() {
     const token = localStorage.getItem('token') ?? undefined;
     const res = await apiGet('/api/google/events/month', token);
     events.value = res.data.items || [];
+    emit('eventsUpdated');
   } catch (e: any) {
     error.value = e.response?.data?.error || 'Failed to fetch events';
   } finally {
@@ -64,14 +70,26 @@ onMounted(async () => {
     await fetchEvents();
     // Clean up query param
     router.replace({ query: { ...route.query, google: undefined } });
-  } else {
+  } else if (isLoggedIn.value) {
     await fetchEvents();
   }
 });
 </script>
 
 <style scoped>
-ul {
-  padding-left: 1.5em;
+.google-calendar-connect {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.connect-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.events-info {
+  margin-top: 0.5rem;
 }
 </style>
