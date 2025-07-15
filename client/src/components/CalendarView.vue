@@ -152,7 +152,6 @@ defineExpose({
 <style scoped>
 .calendar-container {
   width: 100%;
-  max-width: 1200px;
   margin: 0 auto;
 }
 
@@ -172,8 +171,10 @@ defineExpose({
   margin-top: 1rem;
 }
 
+
 :deep(.fc) {
-  font-family: inherit;
+  font-family: var(--font-body) !important;
+  color: var(--color-text);
 }
 
 :deep(.fc-toolbar) {
@@ -183,31 +184,33 @@ defineExpose({
 :deep(.fc-toolbar-title) {
   font-size: 1.5rem;
   font-weight: 600;
+  color: var(--color-text);
 }
 
 :deep(.fc-button) {
-  background-color: #18a058;
-  border-color: #18a058;
-  color: white;
-  border-radius: 4px;
-  padding: 4px 8px;
-  font-size: 0.875rem;
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+  border-radius: 8px;
+  padding: 4px 12px;
+  font-size: 0.95rem;
+  font-family: var(--font-body) !important;
 }
 
-:deep(.fc-button:hover) {
-  background-color: #0c7a43;
-  border-color: #0c7a43;
-}
-
+:deep(.fc-button:hover),
 :deep(.fc-button-active) {
-  background-color: #0c7a43 !important;
-  border-color: #0c7a43 !important;
+  background-color: #17696b !important;
+  border-color: #17696b !important;
 }
 
 :deep(.fc-event) {
-  border-radius: 4px;
-  padding: 2px 4px;
-  font-size: 0.75rem;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 0.8rem;
+  border: none;
+  font-family: var(--font-body) !important;
 }
 
 :deep(.custom-event) {

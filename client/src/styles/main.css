@@ -1,6 +1,54 @@
-@import './base.css';
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&family=Playwriter:wght@700&display=swap');
+
+/* Style foundation: fonts, color palette, and tokens */
+:root {
+  /* Font families */
+  --font-heading: 'Playwriter', serif;
+  --font-body: 'Nunito', sans-serif;
+
+  /* Color palette */
+  --color-bg: #eafaf4;         /* Mint background */
+  --color-surface: #eafaf4;    /* Mint card */
+  --color-primary: #21888b;    /* Teal button/accent */
+  --color-text: #18404a;       /* Dark teal text */
+  --color-muted: #7bb7b7;      /* Soft teal muted/disabled */
+  --color-border: #21888b;     /* Teal border/underline */
+  --color-input-bg: #ffffff;   /* Input background */
+
+  /* Base CSS variables */
+  --color-background: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* --color-background: #181818;
+    --color-text: #ffffff; */
+  }
+}
+
+*, *::before, * {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--color-bg);
+  font-family: var(--font-body);
+  color: var(--color-text);
+}
 
 #app {
   margin: 0 auto;
-  padding: 2rem;
+  padding: rem;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  /* font-family: var(--font-heading); */
+}
+
+input, textarea {
+  background: var(--color-input-bg);
+  border: 1px solid var(--color-border);
+  font-family: var(--font-body);
 }

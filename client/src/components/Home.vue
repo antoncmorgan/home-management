@@ -11,9 +11,7 @@
     </div>
     
     <div v-if="isLoggedIn" class="main-content">
-      <div class="connection-section">
-        <GoogleCalendarConnect @events-updated="handleEventsUpdated" />
-      </div>
+
       
       <div class="calendar-section">
         <CalendarView ref="calendarRef" />
@@ -25,7 +23,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { NCard } from 'naive-ui';
-import GoogleCalendarConnect from './GoogleCalendarConnect.vue';
 import CalendarView from './CalendarView.vue';
 
 const isLoggedIn = ref<boolean>(false);
@@ -71,8 +68,8 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  padding: 1rem;
-  max-width: 1400px;
+  padding: 0rem;
+  width: 100%;
   margin: 0 auto;
 }
 

@@ -16,7 +16,8 @@ import NavHeader from './components/NavHeader.vue';
 
 <style scoped>
 .main-content {
-  padding: 24px;
-  min-height: calc(100vh - 64px);
+  padding: 0rem;
+  width: 100%;
+  min-height: calc(100vh - 4rem);
 }
 </style>

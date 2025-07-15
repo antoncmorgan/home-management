@@ -1,21 +1,14 @@
 <template>
   <div class="google-calendar-connect">
-    <n-card size="small">
-      <div class="connect-section">
-        <n-button v-if="isLoggedIn" type="primary" @click="connectGoogle" :loading="loading">
-          Connect Google Calendar
-        </n-button>
-        <n-alert v-if="!isLoggedIn" type="info">
-          Please log in to connect your Google Calendar.
-        </n-alert>
-        <n-alert v-if="error" type="error" style="margin-top: 0.5rem;">
-          {{ error }}
-        </n-alert>
-        <div v-if="events.length" class="events-info">
-          <n-tag type="success">{{ events.length }} events loaded</n-tag>
-        </div>
-      </div>
-    </n-card>
+    <n-button v-if="isLoggedIn" type="primary" @click="connectGoogle" :loading="loading">
+      Connect Google Calendar
+    </n-button>
+    <n-alert v-if="!isLoggedIn" type="info">
+      Please log in to connect your Google Calendar.
+    </n-alert>
+    <n-alert v-if="error" type="error" style="margin-top: 0.5rem;">
+      {{ error }}
+    </n-alert>
   </div>
 </template>
 
@@ -78,18 +71,8 @@ onMounted(async () => {
 
 <style scoped>
 .google-calendar-connect {
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.connect-section {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
   align-items: center;
-}
-
-.events-info {
-  margin-top: 0.5rem;
+  gap: 0.5rem;
 }
 </style>
