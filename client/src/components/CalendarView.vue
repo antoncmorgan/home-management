@@ -48,6 +48,20 @@ const error = ref('');
 const currentView = ref('dayGridMonth');
 const events = ref<any[]>([]);
 
+function getMonthYearFromCalendar(info: any) {
+  // info.view.currentStart is the first date of the current view (e.g., first day of the month)
+  const date = info.view.currentStart;
+  return { month: date.getMonth(), year: date.getFullYear() };
+}
+
+function getRangeFromCalendar(info: any) {
+  // info.start and info.end are the first and last visible dates in the current view
+  return {
+    start: info.start.toISOString(),
+    end: info.end.toISOString()
+  };
+}
+
 const calendarOptions = reactive({
   plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
   initialView: 'dayGridMonth',
@@ -69,8 +83,11 @@ const calendarOptions = reactive({
   eventResize: handleEventResize,
   eventClassNames: ['custom-event'],
   eventDidMount: (info: any) => {
-    // Add custom styling or tooltips here if needed
     info.el.setAttribute('title', info.event.title);
+  },
+  datesSet: async (info: any) => {
+    const { start, end } = getRangeFromCalendar(info);
+    await fetchEvents(start, end);
   }
 });
 
@@ -120,7 +137,7 @@ function transformGoogleEventsToFullCalendar(googleEvents: any[]) {
   }));
 }
 
-async function fetchEvents() {
+async function fetchEvents(start?: string, end?: string) {
   error.value = '';
   try {
     const token = localStorage.getItem('token');
@@ -128,8 +145,11 @@ async function fetchEvents() {
       error.value = 'Please log in to view calendar events';
       return;
     }
-    
-    const res = await apiGet('/api/google/events/month', token);
+    let url = '/api/google/events/month';
+    if (start && end) {
+      url += `?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`;
+    }
+    const res = await apiGet(url, token);
     const googleEvents = res.data.items || [];
     events.value = transformGoogleEventsToFullCalendar(googleEvents);
   } catch (e: any) {
@@ -139,7 +159,10 @@ async function fetchEvents() {
 }
 
 onMounted(async () => {
-  await fetchEvents();
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999).toISOString();
+  await fetchEvents(start, end);
 });
 
 // Expose methods for parent components

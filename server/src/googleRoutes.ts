@@ -36,27 +36,39 @@ import jwt from 'jsonwebtoken';
 router.get('/callback', async (req, res) => {
   const code = req.query.code as string;
   const state = req.query.state as string; // JWT passed as state
-  if (!code) return res.status(400).send('No code provided');
-  if (!state) return res.status(400).send('No state (JWT) provided');
+  if (!code) {
+    return res.status(400).send('No code provided');
+  }
+
+  if (!state) {
+    return res.status(400).send('No state (JWT) provided');
+  }
+
   try {
     // Validate JWT
     let payload;
     if (!process.env.JWT_SECRET) {
       return res.status(500).json({ error: 'JWT_SECRET not set in environment' });
     }
+
     try {
       payload = jwt.verify(state, process.env.JWT_SECRET);
     } catch (e) {
       return res.status(401).json({ error: 'Invalid or expired JWT in state' });
     }
+
     let username;
     if (typeof payload === 'object' && payload !== null && 'username' in payload) {
       username = (payload as any).username;
     } else {
       return res.status(400).json({ error: 'JWT payload missing username' });
     }
+
     const user = await findUserByUsername(username);
-    if (!user) return res.status(401).json({ error: 'User not found' });
+    if (!user) {
+      return res.status(401).json({ error: 'User not found' });
+    }
+
     const { tokens } = await oauth2Client.getToken(code);
     await saveGoogleTokens(user.id, tokens);
     res.json({ message: 'Google tokens saved', tokens });
@@ -69,9 +81,15 @@ router.get('/calendars', requireAuth, async (req, res) => {
   try {
     const username = (req as any).user.username;
     const user = await findUserByUsername(username);
-    if (!user) return res.status(401).json({ error: 'User not found' });
+    if (!user) {
+      return res.status(401).json({ error: 'User not found' });
+    }
+
     const tokens = await getGoogleTokens(user.id);
-    if (!tokens) return res.status(400).json({ error: 'No Google tokens found for user' });
+    if (!tokens) {
+      return res.status(400).json({ error: 'No Google tokens found for user' });
+    }
+
     oauth2Client.setCredentials(tokens);
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
     const result = await calendar.calendarList.list();
@@ -86,14 +104,30 @@ router.get('/events/month', requireAuth, async (req, res) => {
   try {
     const username = (req as any).user.username;
     const user = await findUserByUsername(username);
-    if (!user) return res.status(401).json({ error: 'User not found' });
+    if (!user) {
+      return res.status(401).json({ error: 'User not found' });
+    }
     const tokens = await getGoogleTokens(user.id);
-    if (!tokens) return res.status(400).json({ error: 'No Google tokens found for user' });
+    if (!tokens) {
+      return res.status(400).json({ error: 'No Google tokens found for user' });
+    }
     oauth2Client.setCredentials(tokens);
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
-    const now = new Date();
-    const start = new Date(now.getFullYear(), now.getMonth(), 1);
-    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    // Accept start and end ISO date strings as query params
+    const startParam = req.query.start as string | undefined;
+    const endParam = req.query.end as string | undefined;
+    let start, end;
+    if (startParam && endParam) {
+      start = new Date(startParam);
+      end = new Date(endParam);
+    } else {
+      // fallback to current month
+      const now = new Date();
+      start = new Date(now.getFullYear(), now.getMonth(), 1);
+      end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    }
+
     const result = await calendar.events.list({
       calendarId: 'primary',
       timeMin: start.toISOString(),
