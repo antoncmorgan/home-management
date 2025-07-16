@@ -1,24 +1,6 @@
 <template>
   <div class="calendar-container">
     <n-card>
-      <template #header>
-        <div class="calendar-header">
-          <h3>Calendar</h3>
-          <div class="calendar-controls">
-            <n-button-group>
-              <n-button @click="changeView('dayGridMonth')" :type="currentView === 'dayGridMonth' ? 'primary' : 'default'">
-                Month
-              </n-button>
-              <n-button @click="changeView('timeGridWeek')" :type="currentView === 'timeGridWeek' ? 'primary' : 'default'">
-                Week
-              </n-button>
-              <n-button @click="changeView('timeGridDay')" :type="currentView === 'timeGridDay' ? 'primary' : 'default'">
-                Day
-              </n-button>
-            </n-button-group>
-          </div>
-        </div>
-      </template>
       
       <div class="calendar-wrapper">
         <FullCalendar
@@ -48,12 +30,6 @@ const error = ref('');
 const currentView = ref('dayGridMonth');
 const events = ref<any[]>([]);
 
-function getMonthYearFromCalendar(info: any) {
-  // info.view.currentStart is the first date of the current view (e.g., first day of the month)
-  const date = info.view.currentStart;
-  return { month: date.getMonth(), year: date.getFullYear() };
-}
-
 function getRangeFromCalendar(info: any) {
   // info.start and info.end are the first and last visible dates in the current view
   return {
@@ -68,7 +44,7 @@ const calendarOptions = reactive({
   headerToolbar: {
     left: 'prev,next today',
     center: 'title',
-    right: ''
+    right: 'dayGridMonth,timeGridWeek,timeGridDay'
   },
   events: events,
   selectable: true,
@@ -84,18 +60,21 @@ const calendarOptions = reactive({
   eventClassNames: ['custom-event'],
   eventDidMount: (info: any) => {
     info.el.setAttribute('title', info.event.title);
+    // Lower opacity for events that end before today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const eventEnd = info.event.end ? new Date(info.event.end) : new Date(info.event.start);
+    eventEnd.setHours(0, 0, 0, 0);
+    if (eventEnd < today) {
+      info.el.classList.add('fc-event-before-today');
+    }
   },
+
   datesSet: async (info: any) => {
     const { start, end } = getRangeFromCalendar(info);
     await fetchEvents(start, end);
   }
 });
-
-function changeView(viewName: string) {
-  currentView.value = viewName;
-  const calendarApi = calendarRef.value.getApi();
-  calendarApi.changeView(viewName);
-}
 
 function handleEventClick(clickInfo: any) {
   // Handle event click - could open a modal or navigate to event details
@@ -274,5 +253,15 @@ defineExpose({
     display: flex;
     justify-content: center;
   }
+}
+/* Lower opacity for events before today */
+:deep(.fc-event-before-today) {
+  opacity: 0.4;
+}
+
+/* Blue highlight for today cell */
+:deep(.fc-day-today),
+:deep(.fc-timegrid-col.fc-day-today) {
+  /* background: #c2f4ef !important; */
 }
 </style>
