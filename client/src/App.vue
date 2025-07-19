@@ -2,7 +2,7 @@
 <template>
   <n-layout position="absolute">
     <NavHeader />
-    <n-layout-content class="main-content">
+    <n-layout-content class="app-content">
       <router-view />
     </n-layout-content>
   </n-layout>
@@ -15,9 +15,9 @@ import NavHeader from './components/NavHeader.vue';
 </script>
 
 <style scoped>
-.main-content {
+.app-content {
   padding: 0rem;
   width: 100%;
-  min-height: calc(100vh - 4rem);
+  height: calc(100vh - var(--top-nav-height));
 }
 </style>

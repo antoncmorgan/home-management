@@ -1,9 +1,8 @@
 <template>
   <div class="calendar-container">
-    <n-card>
-      
+    <n-card class="calendar-card">
       <div class="calendar-wrapper">
-        <FullCalendar
+        <FullCalendar class="full-calendar-container"
           ref="calendarRef"
           :options="calendarOptions"
         />
@@ -22,7 +21,7 @@ import FullCalendar from '@fullcalendar/vue3';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { NCard, NButton, NButtonGroup, NAlert } from 'naive-ui';
+import { NCard, NAlert } from 'naive-ui';
 import { apiGet } from '../api';
 
 const calendarRef = ref();
@@ -52,7 +51,7 @@ const calendarOptions = reactive({
   dayMaxEvents: true,
   weekends: true,
   editable: true,
-  height: 'auto',
+  height: "100%",
   eventClick: handleEventClick,
   select: handleDateSelect,
   eventDrop: handleEventDrop,
@@ -75,6 +74,13 @@ const calendarOptions = reactive({
     await fetchEvents(start, end);
   }
 });
+
+function handleEventsUpdated() {
+  // Refresh the calendar when events are updated
+  if (calendarRef.value) {
+    calendarRef.value.refreshEvents();
+  }
+}
 
 function handleEventClick(clickInfo: any) {
   // Handle event click - could open a modal or navigate to event details
@@ -155,6 +161,7 @@ defineExpose({
 .calendar-container {
   width: 100%;
   margin: 0 auto;
+  height: calc(100vh - var(--top-nav-height));
 }
 
 .calendar-header {
@@ -171,6 +178,17 @@ defineExpose({
 
 .calendar-wrapper {
   margin-top: 1rem;
+  height: calc(100vh - var(--top-nav-height) - 4rem);
+}
+
+.calendar-card {
+    width: 100%;
+    height: calc(100vh - var(--top-nav-height));
+}
+
+.full-calendar-container {
+  width: 100%;
+  height: calc(100vh - var(--top-nav-height));
 }
 
 

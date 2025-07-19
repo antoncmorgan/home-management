@@ -11,8 +11,6 @@
     </div>
     
     <div v-if="isLoggedIn" class="main-content">
-
-      
       <div class="calendar-section">
         <CalendarView ref="calendarRef" />
       </div>
@@ -28,13 +26,6 @@ import CalendarView from './CalendarView.vue';
 const isLoggedIn = ref<boolean>(false);
 const calendarRef = ref();
 
-function handleEventsUpdated() {
-  // Refresh the calendar when events are updated
-  if (calendarRef.value) {
-    calendarRef.value.refreshEvents();
-  }
-}
-
 onMounted(() => {
   const token = localStorage.getItem('token');
   isLoggedIn.value = !!token;
@@ -43,7 +34,7 @@ onMounted(() => {
 
 <style scoped>
 .home-page-container {
-  min-height: 100vh;
+  height: calc(100vh - var(--top-nav-height));
   width: 100%;
 }
 
@@ -71,20 +62,12 @@ onMounted(() => {
   padding: 0rem;
   width: 100%;
   margin: 0 auto;
-}
-
-.connection-section {
-  display: flex;
-  justify-content: center;
+  height: calc(100vh - var(--top-nav-height));
 }
 
 .calendar-section {
   width: 100%;
+  height: calc(100vh - var(--top-nav-height));
 }
 
-@media (max-width: 768px) {
-  .main-content {
-    padding: 0.5rem;
-  }
-}
 </style>
