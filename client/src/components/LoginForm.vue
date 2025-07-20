@@ -16,7 +16,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { NForm, NFormItem, NInput, NButton, NAlert } from 'naive-ui';
-import { apiPost } from '../api';
+import { apiPost } from '../api/api';
 
 const emit = defineEmits<{
   (e: 'login-success'): void;

@@ -15,7 +15,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { apiGet, apiRedirect } from '../api';
+import { apiGet, apiRedirect } from '../api/api';
 import { useMessage, NButton, NAlert, NCard, NTag } from 'naive-ui';
 
 const loading = ref(false);
@@ -44,8 +44,7 @@ async function fetchEvents() {
   loading.value = true;
   error.value = '';
   try {
-    const token = localStorage.getItem('token') ?? undefined;
-    const res = await apiGet('/api/google/events/month', token);
+    const res = await apiGet('/api/google/events/month');
     events.value = res.data.items || [];
     emit('eventsUpdated');
   } catch (e: any) {

@@ -7,27 +7,57 @@
           :options="calendarOptions"
         />
       </div>
-      
       <n-alert v-if="error" type="error" style="margin-top: 1rem;">
         {{ error }}
       </n-alert>
     </n-card>
+    
+    <FamilyMemberNav
+      :family-members="familyMembers"
+      @add="showAddModal = true"
+      @select="handleSelectMember"
+    />
+    
+    <AddFamilyMemberModal
+      :show="showAddModal"
+      @add="handleAddMember"
+      @close="showAddModal = false"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive } from 'vue';
+import { ref, onMounted, reactive, computed } from 'vue';
+import { storeToRefs } from 'pinia';
 import FullCalendar from '@fullcalendar/vue3';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { NCard, NAlert } from 'naive-ui';
-import { apiGet } from '../api';
+import { apiGet } from '../api/api';
+import FamilyMemberNav from './FamilyMemberNav.vue';
+import AddFamilyMemberModal from './AddFamilyMemberModal.vue';
+import { useFamilyMemberStore } from '../store/familyMemberStore';
+import { FamilyMember } from '../models/FamilyMember';
+
+const showAddModal = ref(false);
+const selectedFamilyMemberId = ref<number|null>(null);
+const familyMemberStore = useFamilyMemberStore();
+const { familyMembers } = storeToRefs(familyMemberStore);
 
 const calendarRef = ref();
 const error = ref('');
 const currentView = ref('dayGridMonth');
 const events = ref<any[]>([]);
+
+onMounted(() => {
+  familyMemberStore.loadFamilyMembers();
+});
+// Filter events by selected family member if set
+const filteredEvents = computed(() => {
+  if (!selectedFamilyMemberId.value) return events.value;
+  return events.value.filter(e => e.familyMemberId === selectedFamilyMemberId.value);
+});
 
 function getRangeFromCalendar(info: any) {
   // info.start and info.end are the first and last visible dates in the current view
@@ -45,7 +75,7 @@ const calendarOptions = reactive({
     center: 'title',
     right: 'dayGridMonth,timeGridWeek,timeGridDay'
   },
-  events: events,
+  events: filteredEvents,
   selectable: true,
   selectMirror: true,
   dayMaxEvents: true,
@@ -67,13 +97,27 @@ const calendarOptions = reactive({
     if (eventEnd < today) {
       info.el.classList.add('fc-event-before-today');
     }
+    // Color event by family member
+    if (info.event.extendedProps.familyMemberId) {
+      const member = familyMembers.value.find(m => m.id === info.event.extendedProps.familyMemberId);
+      if (member && member.color) {
+        info.el.style.backgroundColor = member.color;
+        info.el.style.borderColor = member.color;
+      }
+    }
   },
-
   datesSet: async (info: any) => {
     const { start, end } = getRangeFromCalendar(info);
     await fetchEvents(start, end);
   }
 });
+function handleAddMember(member: FamilyMember) {
+  familyMemberStore.add(member);
+  showAddModal.value = false;
+}
+function handleSelectMember(member: FamilyMember) {
+  selectedFamilyMemberId.value = member.id;
+}
 
 function handleEventsUpdated() {
   // Refresh the calendar when events are updated
@@ -134,7 +178,7 @@ async function fetchEvents(start?: string, end?: string) {
     if (start && end) {
       url += `?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`;
     }
-    const res = await apiGet(url, token);
+    const res = await apiGet(url);
     const googleEvents = res.data.items || [];
     events.value = transformGoogleEventsToFullCalendar(googleEvents);
   } catch (e: any) {
@@ -162,6 +206,9 @@ defineExpose({
   width: 100%;
   margin: 0 auto;
   height: calc(100vh - var(--top-nav-height));
+  display: flex;
+  flex-direction: row;
+  gap: 0rem;
 }
 
 .calendar-header {

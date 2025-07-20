@@ -34,7 +34,7 @@ function onRegisterSuccess() {
 
 <style scoped>
 .auth-page-container {
-  min-height: 100vh;
+  height: calc(100vh - var(--top-nav-height));
   display: flex;
   align-items: center;
   justify-content: center;

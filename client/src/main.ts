@@ -5,6 +5,7 @@ import App from './App.vue';
 import router from './router';
 import { NMessageProvider, NDialogProvider, NConfigProvider } from 'naive-ui';
 import themeOverrides from './naiveThemeOverrides';
+import { createPinia } from 'pinia';
 
 const app = createApp({
   render: () => h(NConfigProvider, { themeOverrides }, {
@@ -15,5 +16,6 @@ const app = createApp({
     })
   })
 });
+app.use(createPinia());
 app.use(router);
 app.mount('#app');
