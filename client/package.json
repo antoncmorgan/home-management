@@ -15,7 +15,7 @@
     "@fullcalendar/interaction": "^6.1.18",
     "@fullcalendar/timegrid": "^6.1.18",
     "@fullcalendar/vue3": "^6.1.18",
-    "@vicons/ionicons5": "^0.13.0",
+    "@iconoir/vue": "^7.11.0",
     "axios": "^1.6.8",
     "naive-ui": "^2.42.0",
     "vue": "^3.5.17",

@@ -20,7 +20,7 @@ import { ref, computed, onMounted } from 'vue';
 import GoogleCalendarConnect from './GoogleCalendarConnect.vue';
 import { useRouter } from 'vue-router';
 import { NLayoutHeader, NButton, NIcon } from 'naive-ui';
-import { SunnyOutline, MoonOutline } from '@vicons/ionicons5';
+import { SunLight, HalfMoon } from '@iconoir/vue';
 import { useOsTheme } from 'naive-ui';
 
 const router = useRouter();
@@ -28,7 +28,7 @@ const osTheme = useOsTheme();
 const isDark = ref(osTheme.value === 'dark');
 const isLoggedIn = ref<boolean>(false);
 
-const themeIcon = computed(() => isDark.value ? SunnyOutline : MoonOutline);
+const themeIcon = computed(() => isDark.value ? SunLight : HalfMoon);
 
 function toggleTheme() {
     isDark.value = !isDark.value;
