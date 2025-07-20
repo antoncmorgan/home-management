@@ -1,14 +1,15 @@
 import { Database } from 'sqlite';
 
-export async function addFamilyMemberDB(db: Database, member: { id: string, familyId: string, name: string, avatar?: string, calendarId?: string }) {
+
+export async function addFamilyMemberDB(db: Database, member: { id: string, familyId: string, userId: number, name: string, avatar?: string, calendarId?: string }) {
   await db.run(
-    'INSERT INTO family_members (id, family_id, name, avatar, calendar_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, datetime(\'now\'), datetime(\'now\'))',
-    [member.id, member.familyId, member.name, member.avatar || null, member.calendarId || null]
+    'INSERT INTO family_members (id, family_id, user_id, name, avatar, calendar_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, datetime(\'now\'), datetime(\'now\'))',
+    [member.id, member.familyId, member.userId, member.name, member.avatar || null, member.calendarId || null]
   );
 }
 
-export async function getFamilyMembersDB(db: Database, familyId: string) {
-  return db.all('SELECT * FROM family_members WHERE family_id = ?', [familyId]);
+export async function getFamilyMembersDB(db: Database, familyId: string, userId: number) {
+  return db.all('SELECT * FROM family_members WHERE family_id = ? AND user_id = ?', [familyId, userId]);
 }
 
 export async function updateFamilyMemberDB(db: Database, id: string, updates: { name?: string, avatar?: string, calendarId?: string }) {

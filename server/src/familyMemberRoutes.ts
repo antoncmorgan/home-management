@@ -1,30 +1,40 @@
+
 import express from 'express';
 import { addFamilyMember, getFamilyMembers, updateFamilyMember, deleteFamilyMember } from './familyMember';
+import { requireAuth } from './requireAuth';
 
 const router = express.Router();
 
 // GET /api/family-members?familyId=xxx
-router.get('/', async (req, res) => {
+router.get('/', requireAuth, async (req, res) => {
   const { familyId } = req.query;
   if (!familyId || typeof familyId !== 'string') {
     return res.status(400).json({ error: 'familyId is required' });
   }
-  const members = await getFamilyMembers(familyId);
+  const userId = (req as any).user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: 'User not authenticated' });
+  }
+  const members = await getFamilyMembers(familyId, userId);
   res.json(members);
 });
 
 // POST /api/family-members
-router.post('/', async (req, res) => {
+router.post('/', requireAuth, async (req, res) => {
   const { familyId, name, avatar, calendarId } = req.body;
   if (!familyId || !name) {
     return res.status(400).json({ error: 'familyId and name are required' });
   }
-  const member = await addFamilyMember({ familyId, name, avatar, calendarId });
+  const userId = (req as any).user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: 'User not authenticated' });
+  }
+  const member = await addFamilyMember({ familyId, userId, name, avatar, calendarId });
   res.status(201).json(member);
 });
 
 // PUT /api/family-members/:id
-router.put('/:id', async (req, res) => {
+router.put('/:id', requireAuth, async (req, res) => {
   const { id } = req.params;
   const updates = req.body;
   const updated = await updateFamilyMember(id, updates);
@@ -35,7 +45,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE /api/family-members/:id
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireAuth, async (req, res) => {
   const { id } = req.params;
   const deleted = await deleteFamilyMember(id);
   if (!deleted) {

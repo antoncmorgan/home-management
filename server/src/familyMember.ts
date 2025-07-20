@@ -7,6 +7,7 @@ import { addFamilyMemberDB, getFamilyMembersDB, updateFamilyMemberDB, deleteFami
 export interface FamilyMember {
   id: string;
   familyId: string;
+  userId: number;
   name: string;
   avatar?: string;
   calendarId?: string;
@@ -27,6 +28,7 @@ export async function addFamilyMember(member: Omit<FamilyMember, 'id' | 'created
   await addFamilyMemberDB(db, {
     id,
     familyId: member.familyId,
+    userId: member.userId,
     name: member.name,
     avatar: member.avatar,
     calendarId: member.calendarId,
@@ -34,12 +36,13 @@ export async function addFamilyMember(member: Omit<FamilyMember, 'id' | 'created
   return newMember;
 }
 
-// Get all family members for a family from the DB
-export async function getFamilyMembers(familyId: string): Promise<FamilyMember[]> {
-  const dbMembers = await getFamilyMembersDB(db, familyId);
+// Get all family members for a family and user from the DB
+export async function getFamilyMembers(familyId: string, userId: number): Promise<FamilyMember[]> {
+  const dbMembers = await getFamilyMembersDB(db, familyId, userId);
   return dbMembers.map((m: any) => ({
     id: m.id,
     familyId: m.family_id,
+    userId: m.user_id,
     name: m.name,
     avatar: m.avatar,
     calendarId: m.calendar_id,
