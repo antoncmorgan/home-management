@@ -22,7 +22,7 @@ Follow the rules below for all code suggestions.
 - Use Naive UI components for UI elements.
 - Keep components small and focused.
 - Style with scoped CSS in each component.
-- Use rem units for sizing and spacing instead of px.
+- Use `rem` units for sizing and spacing instead of `px`.
 - Use async/await for API calls.
 - Follow existing code style and naming conventions.
 - Do not include backend logic in client code.
