@@ -1,9 +1,8 @@
-
 import sqlite3 from 'sqlite3';
 import { open, Database } from 'sqlite';
 import fs from 'fs';
 
-let db: Database<sqlite3.Database, sqlite3.Statement>;
+export let db: Database<sqlite3.Database, sqlite3.Statement>;
 
 export async function initDb(filename?: string) {
   // Ensure the data directory exists
@@ -32,32 +31,13 @@ export async function initDb(filename?: string) {
     id_token TEXT,
     FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
   )`);
-}
-
-export async function saveGoogleTokens(userId: number, tokens: any) {
-  // Upsert tokens for the user
-  await db.run(`INSERT INTO google_tokens (user_id, access_token, refresh_token, scope, token_type, expiry_date, id_token)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(user_id) DO UPDATE SET
-      access_token=excluded.access_token,
-      refresh_token=excluded.refresh_token,
-      scope=excluded.scope,
-      token_type=excluded.token_type,
-      expiry_date=excluded.expiry_date,
-      id_token=excluded.id_token
-  `,
-    [userId, tokens.access_token, tokens.refresh_token, tokens.scope, tokens.token_type, tokens.expiry_date, tokens.id_token]
-  );
-}
-
-export async function getGoogleTokens(userId: number) {
-  return db.get('SELECT * FROM google_tokens WHERE user_id = ?', [userId]);
-}
-
-export async function createUser(username: string, password: string) {
-  return db.run('INSERT INTO users (username, password) VALUES (?, ?)', [username, password]);
-}
-
-export async function findUserByUsername(username: string) {
-  return db.get('SELECT * FROM users WHERE username = ?', [username]);
+  await db.run(`CREATE TABLE IF NOT EXISTS family_members (
+    id TEXT PRIMARY KEY,
+    family_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    avatar TEXT,
+    calendar_id TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
 }

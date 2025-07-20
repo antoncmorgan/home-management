@@ -5,6 +5,8 @@ import express from 'express';
 import cors from 'cors';
 import { initDb } from './db';
 import authRoutes from './authRoutes';
+
+import familyMemberRoutes from './familyMemberRoutes';
 import googleRoutes from './googleRoutes';
 
 
@@ -24,6 +26,8 @@ app.use(cors());
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
+
+app.use('/api/family-members', familyMemberRoutes);
 app.use('/api/google', googleRoutes);
 
 // Basic health check route

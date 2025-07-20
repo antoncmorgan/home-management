@@ -1,0 +1,47 @@
+import express from 'express';
+import { addFamilyMember, getFamilyMembers, updateFamilyMember, deleteFamilyMember } from './familyMember';
+
+const router = express.Router();
+
+// GET /api/family-members?familyId=xxx
+router.get('/', async (req, res) => {
+  const { familyId } = req.query;
+  if (!familyId || typeof familyId !== 'string') {
+    return res.status(400).json({ error: 'familyId is required' });
+  }
+  const members = await getFamilyMembers(familyId);
+  res.json(members);
+});
+
+// POST /api/family-members
+router.post('/', async (req, res) => {
+  const { familyId, name, avatar, calendarId } = req.body;
+  if (!familyId || !name) {
+    return res.status(400).json({ error: 'familyId and name are required' });
+  }
+  const member = await addFamilyMember({ familyId, name, avatar, calendarId });
+  res.status(201).json(member);
+});
+
+// PUT /api/family-members/:id
+router.put('/:id', async (req, res) => {
+  const { id } = req.params;
+  const updates = req.body;
+  const updated = await updateFamilyMember(id, updates);
+  if (!updated) {
+    return res.status(404).json({ error: 'Family member not found' });
+  }
+  res.json(updated);
+});
+
+// DELETE /api/family-members/:id
+router.delete('/:id', async (req, res) => {
+  const { id } = req.params;
+  const deleted = await deleteFamilyMember(id);
+  if (!deleted) {
+    return res.status(404).json({ error: 'Family member not found' });
+  }
+  res.status(204).send();
+});
+
+export default router;

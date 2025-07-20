@@ -1,7 +1,9 @@
 import express from 'express';
 import { google } from 'googleapis';
 import { requireAuth } from './requireAuth';
-import { saveGoogleTokens, getGoogleTokens, findUserByUsername } from './db';
+import { db } from './db';
+import { saveGoogleTokens, getGoogleTokens } from './store/googleTokenStore';
+import { findUserByUsername } from './store/userStore';
 
 const router = express.Router();
 
@@ -64,13 +66,13 @@ router.get('/callback', async (req, res) => {
       return res.status(400).json({ error: 'JWT payload missing username' });
     }
 
-    const user = await findUserByUsername(username);
+    const user = await findUserByUsername(db, username);
     if (!user) {
       return res.status(401).json({ error: 'User not found' });
     }
 
     const { tokens } = await oauth2Client.getToken(code);
-    await saveGoogleTokens(user.id, tokens);
+    await saveGoogleTokens(db, user.id, tokens);
     res.json({ message: 'Google tokens saved', tokens });
   } catch (err) {
     res.status(500).json({ error: 'Failed to exchange code for tokens', details: err });
@@ -80,12 +82,12 @@ router.get('/callback', async (req, res) => {
 router.get('/calendars', requireAuth, async (req, res) => {
   try {
     const username = (req as any).user.username;
-    const user = await findUserByUsername(username);
+    const user = await findUserByUsername(db, username);
     if (!user) {
       return res.status(401).json({ error: 'User not found' });
     }
 
-    const tokens = await getGoogleTokens(user.id);
+    const tokens = await getGoogleTokens(db, user.id);
     if (!tokens) {
       return res.status(400).json({ error: 'No Google tokens found for user' });
     }
@@ -103,11 +105,11 @@ router.get('/calendars', requireAuth, async (req, res) => {
 router.get('/events/month', requireAuth, async (req, res) => {
   try {
     const username = (req as any).user.username;
-    const user = await findUserByUsername(username);
+    const user = await findUserByUsername(db, username);
     if (!user) {
       return res.status(401).json({ error: 'User not found' });
     }
-    const tokens = await getGoogleTokens(user.id);
+    const tokens = await getGoogleTokens(db, user.id);
     if (!tokens) {
       return res.status(400).json({ error: 'No Google tokens found for user' });
     }

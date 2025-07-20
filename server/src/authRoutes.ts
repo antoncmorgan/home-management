@@ -2,7 +2,8 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { createUser, findUserByUsername } from './db';
+import { db } from './db';
+import { createUser, findUserByUsername } from './store/userStore';
 
 const router = express.Router();
 
@@ -14,19 +15,19 @@ router.post('/register', async (req, res) => {
   if (!username || !password) {
     return res.status(400).json({ message: 'Username and password required' });
   }
-  const existingUser = await findUserByUsername(username);
+  const existingUser = await findUserByUsername(db, username);
   if (existingUser) {
     return res.status(409).json({ message: 'User already exists' });
   }
   const hashedPassword = await bcrypt.hash(password, 10);
-  await createUser(username, hashedPassword);
+  await createUser(db, username, hashedPassword);
   res.status(201).json({ message: 'User registered' });
 });
 
 // Login route
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
-  const user = await findUserByUsername(username);
+  const user = await findUserByUsername(db, username);
   if (!user) {
     return res.status(401).json({ message: 'Invalid credentials' });
   }
