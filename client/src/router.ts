@@ -16,4 +16,21 @@ const router = createRouter({
   routes,
 });
 
+// Navigation guard for auth protection
+router.beforeEach((to, from, next) => {
+  const publicPaths = ['/'];
+  const token = localStorage.getItem('token');
+  const isPublic = publicPaths.includes(to.path);
+
+  if (!isPublic && !token) {
+    // Not logged in, redirect to login
+    next({ path: '/', query: { redirect: to.fullPath } });
+  } else if (isPublic && token) {
+    // Already logged in, redirect to home
+    next({ path: '/home' });
+  } else {
+    next();
+  }
+});
+
 export default router;
