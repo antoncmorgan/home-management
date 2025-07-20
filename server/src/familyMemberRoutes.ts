@@ -8,14 +8,17 @@ const router = express.Router();
 // GET /api/family-members?familyId=xxx
 router.get('/', requireAuth, async (req, res) => {
   const { familyId } = req.query;
-  if (!familyId || typeof familyId !== 'string') {
-    return res.status(400).json({ error: 'familyId is required' });
-  }
   const userId = (req as any).user?.id;
   if (!userId) {
     return res.status(401).json({ error: 'User not authenticated' });
   }
-  const members = await getFamilyMembers(familyId, userId);
+  let members;
+  if (familyId && typeof familyId === 'string') {
+    members = await getFamilyMembers(familyId, userId);
+  } else {
+    // Get all family members for this user
+    members = await getFamilyMembers(undefined, userId);
+  }
   res.json(members);
 });
 

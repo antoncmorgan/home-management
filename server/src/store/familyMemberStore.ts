@@ -8,8 +8,12 @@ export async function addFamilyMemberDB(db: Database, member: { id: string, fami
   );
 }
 
-export async function getFamilyMembersDB(db: Database, familyId: string, userId: number) {
-  return db.all('SELECT * FROM family_members WHERE family_id = ? AND user_id = ?', [familyId, userId]);
+export async function getFamilyMembersDB(db: Database, familyId: string | undefined, userId: number) {
+  if (familyId) {
+    return db.all('SELECT * FROM family_members WHERE family_id = ? AND user_id = ?', [familyId, userId]);
+  } else {
+    return db.all('SELECT * FROM family_members WHERE user_id = ?', [userId]);
+  }
 }
 
 export async function updateFamilyMemberDB(db: Database, id: string, updates: { name?: string, avatar?: string, calendarId?: string }) {

@@ -37,7 +37,7 @@ export async function addFamilyMember(member: Omit<FamilyMember, 'id' | 'created
 }
 
 // Get all family members for a family and user from the DB
-export async function getFamilyMembers(familyId: string, userId: number): Promise<FamilyMember[]> {
+export async function getFamilyMembers(familyId: string | undefined, userId: number): Promise<FamilyMember[]> {
   const dbMembers = await getFamilyMembersDB(db, familyId, userId);
   return dbMembers.map((m: any) => ({
     id: m.id,
