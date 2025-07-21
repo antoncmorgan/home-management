@@ -1,4 +1,3 @@
-// FamilyMember interface/model for client
 export interface FamilyMember {
   id: string;
   familyId: string;
@@ -6,8 +5,8 @@ export interface FamilyMember {
   name: string;
   avatar?: string;
   calendarId?: string;
-  color?: string;
   email?: string;
+  color?: string;
   createdAt: Date;
   updatedAt: Date;
 }

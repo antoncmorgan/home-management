@@ -1,6 +1,6 @@
 
 import express from 'express';
-import { addFamilyMember, getFamilyMembers, updateFamilyMember, deleteFamilyMember } from './familyMember';
+import { addFamilyMember, getFamilyMembers, updateFamilyMember, deleteFamilyMember } from '../store/familyMemberStore';
 import { requireAuth } from './requireAuth';
 
 const router = express.Router();

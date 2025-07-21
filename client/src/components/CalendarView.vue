@@ -41,7 +41,7 @@ import { useFamilyMemberStore } from '../store/familyMemberStore';
 import { FamilyMember } from '../models/FamilyMember';
 
 const showAddModal = ref(false);
-const selectedFamilyMemberId = ref<number|null>(null);
+const selectedFamilyMemberId = ref<string|null>(null);
 const familyMemberStore = useFamilyMemberStore();
 const { familyMembers } = storeToRefs(familyMemberStore);
 

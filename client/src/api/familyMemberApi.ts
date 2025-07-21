@@ -13,11 +13,11 @@ export async function addFamilyMember(member: Omit<FamilyMember, 'id'>): Promise
   return res.data;
 }
 
-export async function updateFamilyMember(id: number, member: Partial<FamilyMember>): Promise<FamilyMember> {
+export async function updateFamilyMember(id: string, member: Partial<FamilyMember>): Promise<FamilyMember> {
   const res = await apiPut<FamilyMember>(`${API_BASE}/${id}`, member);
   return res.data;
 }
 
-export async function deleteFamilyMember(id: number): Promise<void> {
+export async function deleteFamilyMember(id: string): Promise<void> {
   await apiDelete(`${API_BASE}/${id}`);
 }

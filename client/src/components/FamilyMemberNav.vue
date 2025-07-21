@@ -7,7 +7,7 @@
       :style="{ borderColor: member.color || '#ccc' }"
       @click="$emit('select', member)"
     >
-      <img v-if="member.avatarUrl" :src="member.avatarUrl" :alt="member.name" />
+      <img v-if="member.avatar" :src="member.avatar" :alt="member.name" />
       <span v-else>{{ member.name.charAt(0) }}</span>
     </div>
     <div class="family-member-icon add" @click="$emit('add')">

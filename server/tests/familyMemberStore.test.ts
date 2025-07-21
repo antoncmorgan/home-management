@@ -1,5 +1,5 @@
 
-import { addFamilyMember, getFamilyMembers, updateFamilyMember, deleteFamilyMember } from '../src/familyMember';
+import { addFamilyMember, getFamilyMembers, updateFamilyMember, deleteFamilyMember } from '../src/store/familyMemberStore';
 import { initDb, db } from '../src/db';
 import { createUser } from '../src/store/userStore';
 

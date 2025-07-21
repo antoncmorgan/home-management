@@ -1,9 +1,9 @@
 import express from 'express';
 import { google } from 'googleapis';
 import { requireAuth } from './requireAuth';
-import { db } from './db';
-import { saveGoogleTokens, getGoogleTokens } from './store/googleTokenStore';
-import { findUserByUsername } from './store/userStore';
+import { db } from '../db';
+import { saveGoogleTokens, getGoogleTokens } from '../store/googleTokenStore';
+import { findUserByUsername } from '../store/userStore';
 
 const router = express.Router();
 

@@ -2,8 +2,8 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { db } from './db';
-import { createUser, findUserByUsername } from './store/userStore';
+import { db } from '../db';
+import { createUser, findUserByUsername } from '../store/userStore';
 
 const router = express.Router();
 

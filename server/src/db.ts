@@ -20,6 +20,28 @@ export async function initDb(filename?: string) {
     username TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL
   )`);
+
+  await db.run(`CREATE TABLE IF NOT EXISTS families (
+    id TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    display_name TEXT NOT NULL,
+    primary_email TEXT,
+    address_street TEXT,
+    address_city TEXT,
+    address_state TEXT,
+    address_zip TEXT,
+    phone_number TEXT,
+    timezone TEXT,
+    notes TEXT,
+    photo_url TEXT,
+    invite_code TEXT,
+    settings_json TEXT,
+    is_active INTEGER DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+  )`);
+
   await db.run(`CREATE TABLE IF NOT EXISTS google_tokens (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL UNIQUE,
@@ -31,6 +53,7 @@ export async function initDb(filename?: string) {
     id_token TEXT,
     FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
   )`);
+
   await db.run(`CREATE TABLE IF NOT EXISTS family_members (
     id TEXT PRIMARY KEY,
     family_id TEXT NOT NULL,
@@ -39,8 +62,10 @@ export async function initDb(filename?: string) {
     avatar TEXT,
     calendar_id TEXT,
     email TEXT,
+    color TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY(family_id) REFERENCES families(id) ON DELETE CASCADE
   )`);
 }

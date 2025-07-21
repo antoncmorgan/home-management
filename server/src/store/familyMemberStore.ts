@@ -1,22 +1,44 @@
-import { Database } from 'sqlite';
+import { v4 as uuidv4 } from 'uuid';
+import { db } from '../db';
+import type { FamilyMember } from '../models/familyMember';
 
-
-export async function addFamilyMemberDB(db: Database, member: { id: string, familyId: string, userId: number, name: string, avatar?: string, calendarId?: string, email?: string }) {
+export async function addFamilyMember(member: Omit<FamilyMember, 'id' | 'createdAt' | 'updatedAt'>): Promise<FamilyMember> {
+  const id = uuidv4();
+  const now = new Date();
   await db.run(
-    'INSERT INTO family_members (id, family_id, user_id, name, avatar, calendar_id, email, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime(\'now\'), datetime(\'now\'))',
-    [member.id, member.familyId, member.userId, member.name, member.avatar || null, member.calendarId || null, member.email || null]
+    'INSERT INTO family_members (id, family_id, user_id, name, avatar, calendar_id, email, color, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime(\'now\'), datetime(\'now\'))',
+    [id, member.familyId, member.userId, member.name, member.avatar || null, member.calendarId || null, member.email || null, member.color || null]
   );
+  return {
+    ...member,
+    id,
+    createdAt: now,
+    updatedAt: now,
+  };
 }
 
-export async function getFamilyMembersDB(db: Database, familyId: string | undefined, userId: number) {
+export async function getFamilyMembers(familyId: string | undefined, userId: number): Promise<FamilyMember[]> {
+  let dbMembers;
   if (familyId) {
-    return db.all('SELECT * FROM family_members WHERE family_id = ? AND user_id = ?', [familyId, userId]);
+    dbMembers = await db.all('SELECT * FROM family_members WHERE family_id = ? AND user_id = ?', [familyId, userId]);
   } else {
-    return db.all('SELECT * FROM family_members WHERE user_id = ?', [userId]);
+    dbMembers = await db.all('SELECT * FROM family_members WHERE user_id = ?', [userId]);
   }
+  return dbMembers.map((m: any) => ({
+    id: m.id,
+    familyId: m.family_id,
+    userId: m.user_id,
+    name: m.name,
+    avatar: m.avatar,
+    calendarId: m.calendar_id,
+    email: m.email,
+    color: m.color,
+    createdAt: m.created_at ? new Date(m.created_at) : new Date(0),
+    updatedAt: m.updated_at ? new Date(m.updated_at) : new Date(0),
+  }));
 }
 
-export async function updateFamilyMemberDB(db: Database, id: string, updates: { name?: string, avatar?: string, calendarId?: string, email?: string }) {
+export async function updateFamilyMember(id: string, updates: Partial<FamilyMember>): Promise<FamilyMember | null> {
   const fields: string[] = [];
   const values: any[] = [];
   if (updates.name !== undefined) {
@@ -35,15 +57,32 @@ export async function updateFamilyMemberDB(db: Database, id: string, updates: { 
     fields.push('email = ?');
     values.push(updates.email);
   }
+  if (updates.color !== undefined) {
+    fields.push('color = ?');
+    values.push(updates.color);
+  }
   if (!fields.length) return null;
   fields.push('updated_at = datetime(\'now\')');
   values.push(id);
   const sql = 'UPDATE family_members SET ' + fields.join(', ') + ' WHERE id = ?';
   await db.run(sql, values);
-  return db.get('SELECT * FROM family_members WHERE id = ?', [id]);
+  const m = await db.get('SELECT * FROM family_members WHERE id = ?', [id]);
+  if (!m) return null;
+  return {
+    id: m.id,
+    familyId: m.family_id,
+    userId: m.user_id,
+    name: m.name,
+    avatar: m.avatar,
+    calendarId: m.calendar_id,
+    email: m.email,
+    color: m.color,
+    createdAt: m.created_at ? new Date(m.created_at) : new Date(0),
+    updatedAt: m.updated_at ? new Date(m.updated_at) : new Date(0),
+  };
 }
 
-export async function deleteFamilyMemberDB(db: Database, id: string): Promise<boolean> {
+export async function deleteFamilyMember(id: string): Promise<boolean> {
   const result = await db.run('DELETE FROM family_members WHERE id = ?', [id]);
   return (result.changes ?? 0) > 0;
 }

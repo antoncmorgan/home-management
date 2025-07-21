@@ -1,7 +1,7 @@
 
 import request from 'supertest';
 import express from 'express';
-import familyMemberRoutes from '../src/familyMemberRoutes';
+import familyMemberRoutes from '../src/routes/familyMemberRoutes';
 import { initDb, db } from '../src/db';
 import { createUser } from '../src/store/userStore';
 
@@ -12,7 +12,7 @@ app.use('/api/family-members', familyMemberRoutes);
 const userId = 1;
 
 // Mock requireAuth middleware to inject user
-jest.mock('../src/requireAuth', () => ({
+jest.mock('../src/routes/requireAuth', () => ({
   requireAuth: (req: any, res: any, next: any) => {
     req.user = { id: userId, username: 'testuser' };
     next();

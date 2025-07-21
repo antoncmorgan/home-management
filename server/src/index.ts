@@ -4,10 +4,10 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { initDb } from './db';
-import authRoutes from './authRoutes';
+import authRoutes from './routes/authRoutes';
 
-import familyMemberRoutes from './familyMemberRoutes';
-import googleRoutes from './googleRoutes';
+import familyMemberRoutes from './routes/familyMemberRoutes';
+import googleRoutes from './routes/googleRoutes';
 
 
 const app = express();

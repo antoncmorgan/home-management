@@ -1,7 +1,7 @@
 import express from 'express';
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
-import { requireAuth } from '../src/requireAuth';
+import { requireAuth } from '../src/routes/requireAuth';
 
 const app = express();
 app.get('/protected', requireAuth, (req, res) => {

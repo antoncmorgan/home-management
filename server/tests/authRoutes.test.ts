@@ -1,6 +1,6 @@
 import request from 'supertest';
 import express from 'express';
-import authRoutes from '../src/authRoutes';
+import authRoutes from '../src/routes/authRoutes';
 import { initDb } from '../src/db';
 
 
