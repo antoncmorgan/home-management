@@ -4,6 +4,9 @@
       <n-form-item label="Name" required>
         <n-input v-model:value="name" required placeholder="Enter name" />
       </n-form-item>
+      <n-form-item label="Email (optional)">
+        <n-input v-model:value="email" placeholder="Enter email" />
+      </n-form-item>
       <n-form-item label="Avatar">
         <div class="avatar-options">
           <button
@@ -64,6 +67,7 @@ export default defineComponent({
   emits: ['add', 'close'],
   setup(props, { emit }) {
     const name = ref('');
+    const email = ref('');
     // Default to generic person
     const avatarUrl = ref('🧑');
     const color = ref('#cccccc');
@@ -92,13 +96,14 @@ export default defineComponent({
     watch(() => props.show, (val) => {
       if (val) {
         name.value = '';
+        email.value = '';
         avatarUrl.value = '🧑';
         color.value = '#cccccc';
       }
     });
 
     function submit() {
-      emit('add', { name: name.value, avatarUrl: avatarUrl.value, color: color.value });
+      emit('add', { name: name.value, email: email.value, avatarUrl: avatarUrl.value, color: color.value });
     }
     function close() {
       emit('close');
@@ -129,7 +134,7 @@ export default defineComponent({
       return getLuminance(color.value) > 0.5 ? '#222' : '#fff';
     });
 
-    return { name, avatarUrl, color, avatarOptions, presetColors, submit, close, paletteIconColor };
+    return { name, email, avatarUrl, color, avatarOptions, presetColors, submit, close, paletteIconColor };
   },
 });
 </script>
@@ -145,7 +150,7 @@ export default defineComponent({
 .add-family-member-form {
   display: flex;
   flex-direction: column;
-  gap: 1em;
+  gap: 0rem;
 }
 
 .avatar-options {

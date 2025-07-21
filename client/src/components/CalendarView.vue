@@ -47,7 +47,6 @@ const { familyMembers } = storeToRefs(familyMemberStore);
 
 const calendarRef = ref();
 const error = ref('');
-const currentView = ref('dayGridMonth');
 const events = ref<any[]>([]);
 
 onMounted(() => {

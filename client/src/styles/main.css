@@ -53,3 +53,7 @@ input, textarea {
   border: 1px solid var(--color-border);
   font-family: var(--font-body);
 }
+
+.n-input .n-input__placeholder {
+  line-height: 2rem;
+}

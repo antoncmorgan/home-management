@@ -1,10 +1,10 @@
 import { Database } from 'sqlite';
 
 
-export async function addFamilyMemberDB(db: Database, member: { id: string, familyId: string, userId: number, name: string, avatar?: string, calendarId?: string }) {
+export async function addFamilyMemberDB(db: Database, member: { id: string, familyId: string, userId: number, name: string, avatar?: string, calendarId?: string, email?: string }) {
   await db.run(
-    'INSERT INTO family_members (id, family_id, user_id, name, avatar, calendar_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, datetime(\'now\'), datetime(\'now\'))',
-    [member.id, member.familyId, member.userId, member.name, member.avatar || null, member.calendarId || null]
+    'INSERT INTO family_members (id, family_id, user_id, name, avatar, calendar_id, email, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime(\'now\'), datetime(\'now\'))',
+    [member.id, member.familyId, member.userId, member.name, member.avatar || null, member.calendarId || null, member.email || null]
   );
 }
 
@@ -16,7 +16,7 @@ export async function getFamilyMembersDB(db: Database, familyId: string | undefi
   }
 }
 
-export async function updateFamilyMemberDB(db: Database, id: string, updates: { name?: string, avatar?: string, calendarId?: string }) {
+export async function updateFamilyMemberDB(db: Database, id: string, updates: { name?: string, avatar?: string, calendarId?: string, email?: string }) {
   const fields: string[] = [];
   const values: any[] = [];
   if (updates.name !== undefined) {
@@ -30,6 +30,10 @@ export async function updateFamilyMemberDB(db: Database, id: string, updates: { 
   if (updates.calendarId !== undefined) {
     fields.push('calendar_id = ?');
     values.push(updates.calendarId);
+  }
+  if (updates.email !== undefined) {
+    fields.push('email = ?');
+    values.push(updates.email);
   }
   if (!fields.length) return null;
   fields.push('updated_at = datetime(\'now\')');

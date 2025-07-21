@@ -1,7 +1,12 @@
 // FamilyMember interface/model for client
 export interface FamilyMember {
-  id: number;
+  id: string;
+  familyId: string;
+  userId: number;
   name: string;
-  avatarUrl?: string;
-  color?: string;
+  avatar?: string;
+  calendarId?: string;
+  email?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }

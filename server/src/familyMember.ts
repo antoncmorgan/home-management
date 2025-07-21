@@ -11,6 +11,7 @@ export interface FamilyMember {
   name: string;
   avatar?: string;
   calendarId?: string;
+  email?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -32,6 +33,7 @@ export async function addFamilyMember(member: Omit<FamilyMember, 'id' | 'created
     name: member.name,
     avatar: member.avatar,
     calendarId: member.calendarId,
+    email: member.email,
   });
   return newMember;
 }
@@ -46,6 +48,7 @@ export async function getFamilyMembers(familyId: string | undefined, userId: num
     name: m.name,
     avatar: m.avatar,
     calendarId: m.calendar_id,
+    email: m.email,
     createdAt: m.created_at ? new Date(m.created_at) : new Date(0),
     updatedAt: m.updated_at ? new Date(m.updated_at) : new Date(0),
   }));

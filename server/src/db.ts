@@ -38,6 +38,7 @@ export async function initDb(filename?: string) {
     name TEXT NOT NULL,
     avatar TEXT,
     calendar_id TEXT,
+    email TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
