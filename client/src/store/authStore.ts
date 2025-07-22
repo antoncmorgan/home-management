@@ -17,8 +17,23 @@ export const useAuthStore = defineStore('auth', {
         } catch {
           this.username = '';
         }
+        // Fetch family info and populate homeStore
+        import('../api/familyApi').then(({ listFamilies }) => {
+          listFamilies().then(families => {
+            import('./homeStore').then(({ useHomeStore }) => {
+              if (families && families.length > 0) {
+                useHomeStore().setHome(families[0]);
+              } else {
+                useHomeStore().clearHome();
+              }
+            });
+          });
+        });
       } else {
         this.username = '';
+        import('./homeStore').then(({ useHomeStore }) => {
+          useHomeStore().clearHome();
+        });
       }
     },
     logout() {

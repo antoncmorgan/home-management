@@ -3,67 +3,69 @@
         <n-page-header title="Profile" subtitle="Manage your homes" />
         <div v-if="families.length > 0">
             <n-card>
-                <h3>Homes</h3>
-                <ul>
-                    <li v-for="family in families" :key="family.id">
-                        <strong>{{ family.display_name }}</strong>
-                        <div>{{ family.address_street }}, {{ family.address_city }}, {{ family.address_state }} {{ family.address_zip }}</div>
-                        <div>Email: {{ family.primary_email }}</div>
-                        <div>Phone: {{ family.phone_number }}</div>
-                        <div>Timezone: {{ family.timezone }}</div>
-                        <div>Notes: {{ family.notes }}</div>
-                        <div v-if="family.photo_url">Photo: <img :src="family.photo_url" alt="Home Photo" style="max-width: 100px; max-height: 100px;" /></div>
-                        <div v-if="family.invite_code">Invite Code: {{ family.invite_code }}</div>
-                    </li>
-                </ul>
+                <h3>Your Homes</h3>
+                <div class="homes-list">
+                    <div v-for="family in families" :key="family.id" class="home-pill">
+                        <span class="home-emoji">🏠</span>
+                        <span class="home-name">{{ family.display_name }}</span>
+                        <n-button size="small" @click="editHome(family)">Edit</n-button>
+                    </div>
+                </div>
+            </n-card>
+            <n-card v-if="showEditForm">
+                <h3>Edit Home</h3>
+                <HomeForm :form="form">
+                  <template #actions>
+                    <n-button type="primary" @click="handleSubmit">Save Changes</n-button>
+                    <n-button @click="cancelEdit" style="margin-left: 1rem;">Cancel</n-button>
+                  </template>
+                </HomeForm>
             </n-card>
         </div>
         <div v-else>
             <n-card>
                 <h3>Create Your Home</h3>
                 <p>To get started, please enter your home details below.</p>
-                <n-form :model="form" @submit.prevent="handleSubmit">
-                    <n-form-item label="Username">
-                        <n-input v-model:value="form.username" disabled />
-                    </n-form-item>
-                    <n-form-item label="Home Name">
-                        <n-input v-model:value="form.familyName" />
-                    </n-form-item>
-                    <n-form-item label="Primary Email">
-                        <n-input v-model:value="form.primaryEmail" />
-                    </n-form-item>
-                    <n-form-item label="Street Address">
-                        <n-input v-model:value="form.addressStreet" />
-                    </n-form-item>
-                    <div class="row-flex">
-                        <n-form-item label="City" class="half-width">
-                            <n-input v-model:value="form.addressCity" />
-                        </n-form-item>
-                        <n-form-item label="State" class="half-width">
-                            <StateSelect v-model="form.addressState" />
-                        </n-form-item>
-                    </div>
-                    <n-form-item label="Zip Code">
-                        <n-input v-model:value="form.addressZip" />
-                    </n-form-item>
-                    <n-form-item label="Notes">
-                        <n-input v-model:value="form.notes" type="textarea" />
-                    </n-form-item>
-                    <n-form-item>
-                        <n-button type="primary" html-type="submit">Create Home</n-button>
-                    </n-form-item>
-                </n-form>
+                <HomeForm :form="form">
+                  <template #actions>
+                    <n-button type="primary" @click="handleSubmit">Create Home</n-button>
+                  </template>
+                </HomeForm>
             </n-card>
         </div>
     </n-layout>
 </template>
 
 <script setup lang="ts">
+const showEditForm = ref(false);
+let editingFamilyId: string | null = null;
+
+function editHome(family: Home) {
+    form.value.familyName = family.display_name || '';
+    form.value.primaryEmail = family.primary_email || '';
+    form.value.addressStreet = family.address_street || '';
+    form.value.addressCity = family.address_city || '';
+    form.value.addressState = family.address_state || '';
+    form.value.addressZip = family.address_zip || '';
+    form.value.phoneNumber = family.phone_number || '';
+    form.value.timezone = family.timezone || '';
+    form.value.notes = family.notes || '';
+    form.value.photoUrl = family.photo_url || '';
+    form.value.inviteCode = family.invite_code || '';
+    editingFamilyId = family.id;
+    showEditForm.value = true;
+}
+
+function cancelEdit() {
+    showEditForm.value = false;
+    editingFamilyId = null;
+}
 import { ref, onMounted } from 'vue';
-import { NLayout, NPageHeader, NCard, NForm, NFormItem, NInput, NButton } from 'naive-ui';
+import { NLayout, NPageHeader, NCard, NButton } from 'naive-ui';
 import { listFamilies, updateFamily, createFamily } from '../api/familyApi';
 import type { Home } from '../models/Home';
 import StateSelect from './StateSelect.vue';
+import HomeForm from './HomeForm.vue';
 
 const families = ref<Home[]>([]);
 const form = ref<{
@@ -127,9 +129,8 @@ function fetchProfile() {
 }
 
 function handleSubmit() {
-    if (families.value.length > 0) {
-        const family = families.value[0];
-        updateFamily(family.id, {
+    if (showEditForm.value && editingFamilyId) {
+        updateFamily(editingFamilyId, {
             display_name: form.value.familyName,
             primary_email: form.value.primaryEmail,
             address_street: form.value.addressStreet,
@@ -142,10 +143,11 @@ function handleSubmit() {
             photo_url: form.value.photoUrl,
             invite_code: form.value.inviteCode
         }).then(() => {
-            // Optionally show success message
             fetchProfile();
+            showEditForm.value = false;
+            editingFamilyId = null;
         });
-    } else {
+    } else if (families.value.length === 0) {
         createFamily({
             display_name: form.value.familyName,
             address_street: form.value.addressStreet,
@@ -159,7 +161,6 @@ function handleSubmit() {
             photo_url: form.value.photoUrl,
             invite_code: form.value.inviteCode
         }).then(() => {
-            // Optionally show success message
             fetchProfile();
         });
     }
@@ -171,6 +172,30 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.homes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+.home-pill {
+    display: flex;
+    align-items: center;
+    background: #f5f5f5;
+    border-radius: 2rem;
+    padding: 0.5rem 1.5rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    gap: 1rem;
+}
+.home-emoji {
+    font-size: 1.5rem;
+    margin-right: 0.5rem;
+}
+.home-name {
+    font-weight: 600;
+    font-size: 1.1rem;
+    flex: 1;
+}
 .profile-page {
     max-width: 37.5rem;
     margin: 2rem auto;

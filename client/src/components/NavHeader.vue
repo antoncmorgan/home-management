@@ -1,7 +1,8 @@
 <template>
     <n-layout-header class="nav-header">
         <div class="header-left">
-            <div class="header-title">Home Management</div>
+            <div class="header-title">{{ homeName }}</div>
+            <div class="header-time">{{ currentTime }}</div>
         </div>
         <div class="header-right">
         <div v-if="isLoggedIn" class="user-menu-wrapper">
@@ -20,6 +21,20 @@
 </template>
 
 <script setup lang="ts">
+const currentTime = ref('');
+
+function updateTime() {
+    const now = new Date();
+    currentTime.value = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit'});
+}
+
+onMounted(() => {
+    updateTime();
+    setInterval(updateTime, 1000);
+    checkAuthStatus();
+    // Listen for storage changes to update auth status
+    window.addEventListener('storage', checkAuthStatus);
+});
 import { ref, computed, onMounted } from 'vue';
 import { User } from '@iconoir/vue';
 import { useRouter } from 'vue-router';
@@ -27,13 +42,16 @@ import { NLayoutHeader, NButton, NIcon, NDropdown } from 'naive-ui';
 import { SunLight, HalfMoon } from '@iconoir/vue';
 import { useOsTheme } from 'naive-ui';
 import { useAuthStore } from '../store/authStore';
+import { useHomeStore } from '../store/homeStore';
 
 const router = useRouter();
 const osTheme = useOsTheme();
 const isDark = ref(osTheme.value === 'dark');
 const authStore = useAuthStore();
+const homeStore = useHomeStore();
 const isLoggedIn = computed(() => authStore.isLoggedIn);
 const username = computed(() => authStore.username);
+const homeName = computed(() => homeStore.home.value?.display_name || 'My Home');
 
 const themeIcon = computed(() => isDark.value ? SunLight : HalfMoon);
 const UserIcon = User;
@@ -95,6 +113,15 @@ defineExpose({
 .header-title {
     font-size: 1.5rem;
     font-weight: bold;
+}
+
+.header-time {
+    font-size: 1.1rem;
+    font-weight: 400;
+    margin-left: 1.5rem;
+    color: #888;
+    letter-spacing: 0.5px;
+    min-width: 4.5rem;
 }
 
 .header-right {
