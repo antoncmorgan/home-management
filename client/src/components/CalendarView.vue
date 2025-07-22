@@ -6,10 +6,11 @@
           ref="calendarRef"
           :options="calendarOptions"
         />
+        <div v-if="showConnectOverlay" class="calendar-connect-overlay-wrapper">
+          <div class="calendar-connect-overlay"></div>
+          <GoogleCalendarConnect @calendar-connected="handleCalendarConnectStatus" />
+        </div>
       </div>
-      <n-alert v-if="error" type="error" style="margin-top: 1rem;">
-        {{ error }}
-      </n-alert>
     </n-card>
     
     <FamilyMemberNav
@@ -37,6 +38,7 @@ import { NCard, NAlert } from 'naive-ui';
 import { apiGet } from '../api/api';
 import FamilyMemberNav from './FamilyMemberNav.vue';
 import AddFamilyMemberModal from './AddFamilyMemberModal.vue';
+import GoogleCalendarConnect from './GoogleCalendarConnect.vue';
 import { useFamilyMemberStore } from '../store/familyMemberStore';
 import { FamilyMember } from '../models/FamilyMember';
 
@@ -48,6 +50,15 @@ const { familyMembers } = storeToRefs(familyMemberStore);
 const calendarRef = ref();
 const error = ref('');
 const events = ref<any[]>([]);
+
+const showConnectOverlay = ref(true);
+
+function handleCalendarConnectStatus(isConnected: boolean) {
+  // Only update if value actually changes
+  if (showConnectOverlay.value !== !isConnected) {
+    showConnectOverlay.value = !isConnected;
+  }
+}
 
 onMounted(() => {
   familyMemberStore.loadFamilyMembers();
@@ -227,16 +238,39 @@ defineExpose({
   height: calc(100vh - var(--top-nav-height) - 4rem);
 }
 
+.calendar-overlay-wrapper {
+  position: relative;
+}
+
+.calendar-connect-overlay-wrapper {
+  position: absolute;
+  top: 0rem;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.calendar-connect-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
 .calendar-card {
-    width: 100%;
-    height: calc(100vh - var(--top-nav-height));
+  width: 100%;
+  height: calc(100vh - var(--top-nav-height));
 }
 
 .full-calendar-container {
   width: 100%;
   height: calc(100vh - var(--top-nav-height));
 }
-
 
 :deep(.fc) {
   font-family: var(--font-body) !important;

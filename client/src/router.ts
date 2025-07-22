@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 import AuthPage from './components/AuthPage.vue';
 import Home from './components/Home.vue';
+import ProfilePage from './components/ProfilePage.vue';
 
 const routes: Array<RouteRecordRaw> = [
   { path: '/', component: AuthPage },
@@ -9,6 +10,12 @@ const routes: Array<RouteRecordRaw> = [
   { path: '/weather', name: 'weather', component: Home },
   { path: '/meals', name: 'meals', component: Home },
   { path: '/settings', name: 'settings', component: Home },
+  {
+      path: '/profile',
+      name: 'Profile',
+      component: ProfilePage,
+      meta: { requiresAuth: true }
+  }
 ];
 
 const router = createRouter({

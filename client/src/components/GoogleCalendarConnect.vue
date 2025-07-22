@@ -1,11 +1,8 @@
 <template>
   <div class="google-calendar-connect">
-    <n-button v-if="isLoggedIn" type="primary" @click="connectGoogle" :loading="loading">
+    <n-button v-if="isLoggedIn && !isCalendarConnected" type="primary" @click="connectGoogle" :loading="loading">
       Connect Google Calendar
     </n-button>
-    <n-alert v-if="!isLoggedIn" type="info">
-      Please log in to connect your Google Calendar.
-    </n-alert>
     <n-alert v-if="error" type="error" style="margin-top: 0.5rem;">
       {{ error }}
     </n-alert>
@@ -16,18 +13,19 @@
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { apiGet, apiRedirect } from '../api/api';
-import { useMessage, NButton, NAlert, NCard, NTag } from 'naive-ui';
+import { useMessage, NButton, NAlert } from 'naive-ui';
 
 const loading = ref(false);
 const error = ref('');
-const events = ref<any[]>([]);
 const isLoggedIn = ref(false);
+const isCalendarConnected = ref(false);
 const route = useRoute();
 const router = useRouter();
 const message = useMessage();
 
 const emit = defineEmits<{
-  eventsUpdated: []
+  eventsUpdated: [],
+  calendarConnected: [boolean]
 }>();
 
 function connectGoogle() {
@@ -40,15 +38,18 @@ function connectGoogle() {
   }
 }
 
-async function fetchEvents() {
+async function checkCalendarConnection() {
   loading.value = true;
   error.value = '';
   try {
-    const res = await apiGet('/api/google/events/month');
-    events.value = res.data.items || [];
-    emit('eventsUpdated');
+    const res = await apiGet('/api/google/calendars');
+    // If calendars are returned, consider Google Calendar connected
+    isCalendarConnected.value = Array.isArray(res.data.items) && res.data.items.length > 0;
+    emit('calendarConnected', isCalendarConnected.value);
   } catch (e: any) {
-    error.value = e.response?.data?.error || 'Failed to fetch events';
+    error.value = e.response?.data?.error || 'Failed to check calendar connection';
+    isCalendarConnected.value = false;
+    emit('calendarConnected', false);
   } finally {
     loading.value = false;
   }
@@ -56,14 +57,15 @@ async function fetchEvents() {
 
 onMounted(async () => {
   isLoggedIn.value = !!localStorage.getItem('token');
+  if (isLoggedIn.value) {
+    await checkCalendarConnection();
+  }
   // If redirected back from Google, the backend will have handled the callback
   if (route.query.google === 'success') {
     message.success('Google account connected!');
-    await fetchEvents();
+    await checkCalendarConnection();
     // Clean up query param
     router.replace({ query: { ...route.query, google: undefined } });
-  } else if (isLoggedIn.value) {
-    await fetchEvents();
   }
 });
 </script>
@@ -72,6 +74,7 @@ onMounted(async () => {
 .google-calendar-connect {
   display: flex;
   align-items: center;
+  flex-direction: column;
   gap: 0.5rem;
 }
 </style>

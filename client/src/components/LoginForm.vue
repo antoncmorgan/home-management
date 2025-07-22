@@ -17,6 +17,7 @@
 import { ref, computed } from 'vue';
 import { NForm, NFormItem, NInput, NButton, NAlert } from 'naive-ui';
 import { apiPost } from '../api/api';
+import { useAuthStore } from '../store/authStore';
 
 const emit = defineEmits<{
   (e: 'login-success'): void;
@@ -29,6 +30,8 @@ const error = ref<string>('');
 const usernameError = computed(() => !username.value ? 'Username is required' : '');
 const passwordError = computed(() => !password.value ? 'Password is required' : '');
 
+const authStore = useAuthStore();
+
 async function onSubmit() {
   error.value = '';
   if (!username.value || !password.value) return;
@@ -36,6 +39,7 @@ async function onSubmit() {
   try {
     const res = await apiPost('/api/auth/login', { username: username.value, password: password.value });
     localStorage.setItem('token', res.data.token);
+    authStore.checkAuthStatus();
     emit('login-success');
   } catch (e: any) {
     error.value = e.response?.data?.message || 'Login failed';

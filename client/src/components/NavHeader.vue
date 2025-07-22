@@ -4,31 +4,39 @@
             <div class="header-title">Home Management</div>
         </div>
         <div class="header-right">
-            <GoogleCalendarConnect v-if="isLoggedIn" @events-updated="handleEventsUpdated" />
-            <n-button v-if="isLoggedIn" type="primary" @click="logout" class="logout-btn" size="medium">
-                Logout
-            </n-button>
-            <n-button quaternary circle @click="toggleTheme" class="theme-toggle">
-                <n-icon :component="themeIcon" />
-            </n-button>
+        <div v-if="isLoggedIn" class="user-menu-wrapper">
+            <n-dropdown :options="userDropdownOptions" @select="handleUserMenuSelect">
+                <n-button quaternary circle class="user-btn">
+                    <span class="username">{{ username }}</span>
+                    <n-icon :component="UserIcon" />
+                </n-button>
+            </n-dropdown>
+        </div>
+        <n-button quaternary circle @click="toggleTheme" class="theme-toggle">
+            <n-icon :component="themeIcon" />
+        </n-button>
         </div>
     </n-layout-header>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import GoogleCalendarConnect from './GoogleCalendarConnect.vue';
+import { User } from '@iconoir/vue';
 import { useRouter } from 'vue-router';
-import { NLayoutHeader, NButton, NIcon } from 'naive-ui';
+import { NLayoutHeader, NButton, NIcon, NDropdown } from 'naive-ui';
 import { SunLight, HalfMoon } from '@iconoir/vue';
 import { useOsTheme } from 'naive-ui';
+import { useAuthStore } from '../store/authStore';
 
 const router = useRouter();
 const osTheme = useOsTheme();
 const isDark = ref(osTheme.value === 'dark');
-const isLoggedIn = ref<boolean>(false);
+const authStore = useAuthStore();
+const isLoggedIn = computed(() => authStore.isLoggedIn);
+const username = computed(() => authStore.username);
 
 const themeIcon = computed(() => isDark.value ? SunLight : HalfMoon);
+const UserIcon = User;
 
 function toggleTheme() {
     isDark.value = !isDark.value;
@@ -36,18 +44,24 @@ function toggleTheme() {
 }
 
 function logout() {
-    localStorage.removeItem('token');
-    isLoggedIn.value = false;
+    authStore.logout();
     router.push('/');
 }
 
 function checkAuthStatus() {
-    const token = localStorage.getItem('token');
-    isLoggedIn.value = !!token;
+    authStore.checkAuthStatus();
 }
+const userDropdownOptions = [
+    { label: 'Profile', key: 'profile' },
+    { label: 'Logout', key: 'logout' }
+];
 
-function handleEventsUpdated() {
-    // Optionally handle calendar event updates here
+function handleUserMenuSelect(key: string) {
+    if (key === 'profile') {
+        router.push('/profile');
+    } else if (key === 'logout') {
+        logout();
+    }
 }
 
 onMounted(() => {
@@ -68,7 +82,7 @@ defineExpose({
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 24px;
+    padding: 0 1.5rem;
     background: var(--n-color);
     border-bottom: 1px solid var(--n-border-color);
 }
@@ -86,10 +100,25 @@ defineExpose({
 .header-right {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 0.75rem;
+}
+
+.user-menu-wrapper {
+    display: flex;
+    align-items: center;
+}
+.user-btn {
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+    width: auto;
+}
+.username {
+    font-weight: 500;
+    margin: 0 .5rem;
 }
 
 .logout-btn {
-    margin-right: 8px;
+    margin-right: 0.5rem;
 }
 </style>

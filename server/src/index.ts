@@ -8,6 +8,7 @@ import authRoutes from './routes/authRoutes';
 
 import familyMemberRoutes from './routes/familyMemberRoutes';
 import googleRoutes from './routes/googleRoutes';
+import familyRoutes from './routes/familyRoutes';
 
 
 const app = express();
@@ -28,6 +29,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 
 app.use('/api/family-members', familyMemberRoutes);
+app.use('/api/families', familyRoutes);
 app.use('/api/google', googleRoutes);
 
 // Basic health check route
