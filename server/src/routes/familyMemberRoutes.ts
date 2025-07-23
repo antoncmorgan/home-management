@@ -24,7 +24,7 @@ router.get('/', requireAuth, async (req, res) => {
 
 // POST /api/family-members
 router.post('/', requireAuth, async (req, res) => {
-  const { familyId, name, avatar, calendarId } = req.body;
+  const { familyId, name, avatar, calendarId, email, color } = req.body;
   if (!familyId || !name) {
     return res.status(400).json({ error: 'familyId and name are required' });
   }
@@ -32,7 +32,7 @@ router.post('/', requireAuth, async (req, res) => {
   if (!userId) {
     return res.status(401).json({ error: 'User not authenticated' });
   }
-  const member = await addFamilyMember({ familyId, userId, name, avatar, calendarId });
+  const member = await addFamilyMember({ familyId, userId, name, avatar, calendarId, email, color });
   res.status(201).json(member);
 });
 

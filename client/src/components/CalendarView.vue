@@ -19,7 +19,7 @@
       @select="handleSelectMember"
     />
     
-    <AddFamilyMemberModal
+    <FamilyMemberModal
       :show="showAddModal"
       @add="handleAddMember"
       @close="showAddModal = false"
@@ -37,7 +37,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import { NCard, NAlert } from 'naive-ui';
 import { apiGet } from '../api/api';
 import FamilyMemberNav from './FamilyMemberNav.vue';
-import AddFamilyMemberModal from './AddFamilyMemberModal.vue';
+import FamilyMemberModal from './FamilyMemberModal.vue';
 import GoogleCalendarConnect from './GoogleCalendarConnect.vue';
 import { useFamilyMemberStore } from '../store/familyMemberStore';
 import { FamilyMember } from '../models/FamilyMember';

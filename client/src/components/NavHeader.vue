@@ -25,7 +25,7 @@ const currentTime = ref('');
 
 function updateTime() {
     const now = new Date();
-    currentTime.value = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit'});
+    currentTime.value = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'});
 }
 
 onMounted(() => {
@@ -116,10 +116,10 @@ defineExpose({
 }
 
 .header-time {
-    font-size: 1.1rem;
-    font-weight: 400;
+    font-size: 1.5rem;
+    font-weight: 500;
     margin-left: 1.5rem;
-    color: #888;
+    color: #606060;
     letter-spacing: 0.5px;
     min-width: 4.5rem;
 }

@@ -1,5 +1,5 @@
 <template>
-  <n-modal :show="show" preset="dialog" title="Add Family Member" @mask-click="close" @close="close">
+  <n-modal :show="show" preset="dialog" :title="modalTitle" @mask-click="close" @close="close">
     <n-form @submit.prevent="submit" class="add-family-member-form">
       <n-form-item label="Name" required>
         <n-input v-model:value="name" required placeholder="Enter name" />
@@ -14,8 +14,8 @@
             :key="option.value"
             type="button"
             class="avatar-btn"
-            :class="{ selected: avatarUrl === option.value }"
-            @click="avatarUrl = option.value"
+            :class="{ selected: avatar === option.value }"
+            @click="avatar = option.value"
             :aria-label="option.label"
           >
             <span class="avatar-emoji">{{ option.emoji }}</span>
@@ -46,7 +46,8 @@
         </div>
       </n-form-item>
       <div class="actions">
-        <n-button type="primary" attr-type="submit">Add</n-button>
+        <n-button v-if="mode === 'edit'" @click="handleDelete" type="error">Delete</n-button>
+        <n-button type="primary" attr-type="submit">{{ actionButtonText }}</n-button>
         <n-button @click="close" type="default">Cancel</n-button>
       </div>
     </n-form>
@@ -57,20 +58,30 @@
 import { defineComponent, ref, watch, computed } from 'vue';
 import { NModal, NForm, NFormItem, NInput, NButton } from 'naive-ui';
 import { Palette } from '@iconoir/vue';
+import { useHomeStore } from '../store/homeStore';
 
 export default defineComponent({
-  name: 'AddFamilyMemberModal',
+  name: 'FamilyMemberModal',
   components: { NModal, NForm, NFormItem, NInput, NButton, Palette },
   props: {
     show: Boolean,
+    mode: {
+      type: String,
+      default: 'add',
+      validator: (v: string) => ['add', 'edit'].includes(v)
+    },
+    member: {
+      type: Object,
+      default: null
+    }
   },
-  emits: ['add', 'close'],
+  emits: ['add', 'update', 'delete', 'close'],
   setup(props, { emit }) {
     const name = ref('');
     const email = ref('');
-    // Default to generic person
-    const avatarUrl = ref('🧑');
+    const avatar = ref('🧑');
     const color = ref('#cccccc');
+    const { home } = useHomeStore();
     const presetColors = [
       '#cccccc', // default gray
       '#f87171', // red
@@ -93,20 +104,57 @@ export default defineComponent({
       { label: 'Dog', value: '🐶', emoji: '🐶' },
     ];
 
-    watch(() => props.show, (val) => {
-      if (val) {
-        name.value = '';
-        email.value = '';
-        avatarUrl.value = '🧑';
-        color.value = '#cccccc';
-      }
-    });
+    // Watch for modal open and member prop changes
+    watch(
+      [() => props.show, () => props.member, () => props.mode],
+      ([show, member, mode]) => {
+        if (show) {
+          if (mode === 'edit' && member) {
+            name.value = member.name || '';
+            email.value = member.email || '';
+            avatar.value = member.avatar || '🧑';
+            color.value = member.color || '#cccccc';
+          } else {
+            name.value = '';
+            email.value = '';
+            avatar.value = '🧑';
+            color.value = '#cccccc';
+          }
+        }
+      },
+      { immediate: true }
+    );
+
+    const modalTitle = computed(() => props.mode === 'edit' ? 'Edit Family Member' : 'Add Family Member');
+    const actionButtonText = computed(() => props.mode === 'edit' ? 'Update' : 'Add');
 
     function submit() {
-      emit('add', { name: name.value, email: email.value, avatarUrl: avatarUrl.value, color: color.value });
+      if (props.mode === 'edit' && props.member) {
+        emit('update', {
+          ...props.member,
+          name: name.value,
+          email: email.value,
+          avatar: avatar.value,
+          color: color.value,
+          familyId: props.member.familyId || home.value?.id || ''
+        });
+      } else {
+        emit('add', {
+          name: name.value,
+          email: email.value,
+          avatar: avatar.value,
+          color: color.value,
+          familyId: home.value?.id || ''
+        });
+      }
     }
     function close() {
       emit('close');
+    }
+    function handleDelete() {
+      if (props.mode === 'edit' && props.member) {
+        emit('delete', props.member);
+      }
     }
     function hexToRgb(hex: string) {
       let c = hex.replace('#', '');
@@ -134,7 +182,8 @@ export default defineComponent({
       return getLuminance(color.value) > 0.5 ? '#222' : '#fff';
     });
 
-    return { name, email, avatarUrl, color, avatarOptions, presetColors, submit, close, paletteIconColor };
+    const mode = computed(() => props.mode);
+    return { name, email, avatar, color, avatarOptions, presetColors, submit, close, paletteIconColor, modalTitle, actionButtonText, mode, handleDelete };
   },
 });
 </script>

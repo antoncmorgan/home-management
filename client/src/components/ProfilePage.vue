@@ -8,7 +8,23 @@
                     <div v-for="family in families" :key="family.id" class="home-pill">
                         <span class="home-emoji">🏠</span>
                         <span class="home-name">{{ family.display_name }}</span>
-                        <n-button size="small" @click="editHome(family)">Edit</n-button>
+                        <div class="family-members-list">
+                          <FamilyMemberIcon
+                            v-for="member in family.members"
+                            :key="member.id"
+                            :member="member"
+                          >
+                            <template v-if="showEditForm && editingFamilyId === family.id" #overlay>
+                              <EditPencil
+                                class="edit-pencil"
+                                @click.stop="openEditMemberModal(member)"
+                                aria-label="Edit"
+                              />
+                            </template>
+                          </FamilyMemberIcon>
+                        </div>
+                        <n-button size="small" v-if="!showEditForm" @click="editHome(family)">Edit</n-button>
+                        <n-button size="small" v-else @click="cancelEdit">Cancel</n-button>
                     </div>
                 </div>
             </n-card>
@@ -22,23 +38,49 @@
                 </HomeForm>
             </n-card>
         </div>
-        <div v-else>
-            <n-card>
-                <h3>Create Your Home</h3>
-                <p>To get started, please enter your home details below.</p>
-                <HomeForm :form="form">
-                  <template #actions>
-                    <n-button type="primary" @click="handleSubmit">Create Home</n-button>
-                  </template>
-                </HomeForm>
-            </n-card>
+        <div>
+          <FamilyMemberModal
+            :show="showMemberModal"
+            :member="editingMember"
+            :mode="memberModalMode"
+            @add="handleMemberAdd"
+            @update="handleMemberUpdate"
+            @delete="handleMemberDelete"
+            @close="showMemberModal = false"
+          />
+          <div v-if="families.length === 0">
+              <n-card>
+                  <h3>Create Your Home</h3>
+                  <p>To get started, please enter your home details below.</p>
+                  <HomeForm :form="form">
+                    <template #actions>
+                      <n-button type="primary" @click="handleSubmit">Create Home</n-button>
+                    </template>
+                  </HomeForm>
+              </n-card>
+          </div>
         </div>
     </n-layout>
 </template>
 
 <script setup lang="ts">
+import FamilyMemberIcon from './FamilyMemberIcon.vue';
+import FamilyMemberModal from './FamilyMemberModal.vue';
+import { EditPencil } from '@iconoir/vue';
+import { useFamilyMemberStore } from '../store/familyMemberStore';
+
+import { ref, onMounted } from 'vue';
+import { NLayout, NPageHeader, NCard, NButton } from 'naive-ui';
+import { listFamilies, updateFamily, createFamily } from '../api/familyApi';
+import type { Home } from '../models/Home';
+import type { FamilyMember } from '../models/FamilyMember';
+import HomeForm from './HomeForm.vue';
+
 const showEditForm = ref(false);
 let editingFamilyId: string | null = null;
+const showMemberModal = ref(false);
+const memberModalMode = ref<'add'|'edit'>('add');
+const editingMember = ref<FamilyMember|null>(null);
 
 function editHome(family: Home) {
     form.value.familyName = family.display_name || '';
@@ -60,14 +102,35 @@ function cancelEdit() {
     showEditForm.value = false;
     editingFamilyId = null;
 }
-import { ref, onMounted } from 'vue';
-import { NLayout, NPageHeader, NCard, NButton } from 'naive-ui';
-import { listFamilies, updateFamily, createFamily } from '../api/familyApi';
-import type { Home } from '../models/Home';
-import StateSelect from './StateSelect.vue';
-import HomeForm from './HomeForm.vue';
 
-const families = ref<Home[]>([]);
+function openEditMemberModal(member: FamilyMember) {
+  editingMember.value = member;
+  memberModalMode.value = 'edit';
+  showMemberModal.value = true;
+}
+function openAddMemberModal() {
+  editingMember.value = null;
+  memberModalMode.value = 'add';
+  showMemberModal.value = true;
+}
+function handleMemberAdd(member: FamilyMember) {
+  familyMemberStore.add(member).then(fetchProfile);
+  showMemberModal.value = false;
+}
+function handleMemberUpdate(member: FamilyMember) {
+  familyMemberStore.update(member.id, member).then(fetchProfile);
+  showMemberModal.value = false;
+}
+function handleMemberDelete(member: FamilyMember) {
+  familyMemberStore.remove(member.id).then(fetchProfile);
+  showMemberModal.value = false;
+}
+
+interface HomeWithMembers extends Home {
+  members?: FamilyMember[];
+}
+const families = ref<HomeWithMembers[]>([]);
+const familyMemberStore = useFamilyMemberStore();
 const form = ref<{
     username: string;
     familyName: string;
@@ -96,7 +159,7 @@ const form = ref<{
     inviteCode: '',
 });
 
-function fetchProfile() {
+async function fetchProfile() {
     const token = localStorage.getItem('token');
     // Parse username from token
     if (token) {
@@ -108,29 +171,33 @@ function fetchProfile() {
         }
     }
     // Fetch family info using familyApi
-    listFamilies().then(result => {
-        families.value = result || [];
-        if (families.value.length > 0) {
-            // Optionally, prefill form with first family
-            const family = families.value[0];
-            form.value.familyName = family.display_name || '';
-            form.value.primaryEmail = family.primary_email || '';
-            form.value.addressStreet = family.address_street || '';
-            form.value.addressCity = family.address_city || '';
-            form.value.addressState = family.address_state || '';
-            form.value.addressZip = family.address_zip || '';
-            form.value.phoneNumber = family.phone_number || '';
-            form.value.timezone = family.timezone || '';
-            form.value.notes = family.notes || '';
-            form.value.photoUrl = family.photo_url || '';
-            form.value.inviteCode = family.invite_code || '';
-        }
+    const result = await listFamilies();
+    families.value = result || [];
+    await familyMemberStore.loadFamilyMembers();
+    // Assign members to each family
+    families.value.forEach(family => {
+        family.members = familyMemberStore.familyMembers.filter(m => m.familyId === family.id);
     });
+    if (families.value.length > 0) {
+        // Optionally, prefill form with first family
+        const family = families.value[0];
+        form.value.familyName = family.display_name || '';
+        form.value.primaryEmail = family.primary_email || '';
+        form.value.addressStreet = family.address_street || '';
+        form.value.addressCity = family.address_city || '';
+        form.value.addressState = family.address_state || '';
+        form.value.addressZip = family.address_zip || '';
+        form.value.phoneNumber = family.phone_number || '';
+        form.value.timezone = family.timezone || '';
+        form.value.notes = family.notes || '';
+        form.value.photoUrl = family.photo_url || '';
+        form.value.inviteCode = family.invite_code || '';
+    }
 }
 
-function handleSubmit() {
+async function handleSubmit() {
     if (showEditForm.value && editingFamilyId) {
-        updateFamily(editingFamilyId, {
+        await updateFamily(editingFamilyId, {
             display_name: form.value.familyName,
             primary_email: form.value.primaryEmail,
             address_street: form.value.addressStreet,
@@ -142,13 +209,12 @@ function handleSubmit() {
             notes: form.value.notes,
             photo_url: form.value.photoUrl,
             invite_code: form.value.inviteCode
-        }).then(() => {
-            fetchProfile();
-            showEditForm.value = false;
-            editingFamilyId = null;
         });
+        await fetchProfile();
+        showEditForm.value = false;
+        editingFamilyId = null;
     } else if (families.value.length === 0) {
-        createFamily({
+        await createFamily({
             display_name: form.value.familyName,
             address_street: form.value.addressStreet,
             address_city: form.value.addressCity,
@@ -160,9 +226,8 @@ function handleSubmit() {
             notes: form.value.notes,
             photo_url: form.value.photoUrl,
             invite_code: form.value.inviteCode
-        }).then(() => {
-            fetchProfile();
         });
+        await fetchProfile();
     }
 }
 
@@ -186,6 +251,26 @@ onMounted(() => {
     padding: 0.5rem 1.5rem;
     box-shadow: 0 1px 4px rgba(0,0,0,0.04);
     gap: 1rem;
+}
+.family-members-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0rem 0.5rem;
+    margin-left: 1rem;
+    max-width: 40%;
+}
+.edit-pencil {
+    position: absolute;
+    top: -0.3rem;
+    right: -0.3rem;
+    width: 1.2rem;
+    height: 1.2rem;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 2px #888;
+    cursor: pointer;
+    z-index: 2;
+    padding: 0.1rem;
 }
 .home-emoji {
     font-size: 1.5rem;
