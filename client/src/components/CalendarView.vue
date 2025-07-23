@@ -53,6 +53,29 @@ const events = ref<any[]>([]);
 
 const showConnectOverlay = ref(true);
 
+
+// Helper: match event to a family member
+function getMatchingMember(event: any, members: FamilyMember[]) {
+  // First, try to match by name
+  for (const member of members) {
+    if (event.title && event.title.toLowerCase().includes(member.name.toLowerCase())) {
+      return member;
+    }
+  }
+  // Then, try to match by organizer or creator email
+  for (const member of members) {
+    const organizerEmail = event.extendedProps?.organizer?.email || '';
+    const creatorEmail = event.extendedProps?.creator?.email || '';
+    if (member.email && (
+      (organizerEmail && member.email.toLowerCase() === organizerEmail.toLowerCase()) ||
+      (creatorEmail && member.email.toLowerCase() === creatorEmail.toLowerCase())
+    )) {
+      return member;
+    }
+  }
+  return null;
+}
+
 function handleCalendarConnectStatus(isConnected: boolean) {
   // Only update if value actually changes
   if (showConnectOverlay.value !== !isConnected) {
@@ -66,7 +89,11 @@ onMounted(() => {
 // Filter events by selected family member if set
 const filteredEvents = computed(() => {
   if (!selectedFamilyMemberId.value) return events.value;
-  return events.value.filter(e => e.familyMemberId === selectedFamilyMemberId.value);
+  // Filter events by matching member
+  return events.value.filter(e => {
+    const member = getMatchingMember(e, familyMembers.value);
+    return member && member.id === selectedFamilyMemberId.value;
+  });
 });
 
 function getRangeFromCalendar(info: any) {
@@ -107,13 +134,11 @@ const calendarOptions = reactive({
     if (eventEnd < today) {
       info.el.classList.add('fc-event-before-today');
     }
-    // Color event by family member
-    if (info.event.extendedProps.familyMemberId) {
-      const member = familyMembers.value.find(m => m.id === info.event.extendedProps.familyMemberId);
-      if (member && member.color) {
-        info.el.style.backgroundColor = member.color;
-        info.el.style.borderColor = member.color;
-      }
+    // Color event by matching member
+    const matchedMember = getMatchingMember(info.event, familyMembers.value);
+    if (matchedMember && matchedMember.color) {
+      info.el.style.backgroundColor = matchedMember.color;
+      info.el.style.borderColor = matchedMember.color;
     }
   },
   datesSet: async (info: any) => {
@@ -126,7 +151,11 @@ function handleAddMember(member: FamilyMember) {
   showAddModal.value = false;
 }
 function handleSelectMember(member: FamilyMember) {
-  selectedFamilyMemberId.value = member.id;
+  if (selectedFamilyMemberId.value === member.id) {
+    selectedFamilyMemberId.value = null;
+  } else {
+    selectedFamilyMemberId.value = member.id;
+  }
 }
 
 function handleEventsUpdated() {
@@ -137,8 +166,16 @@ function handleEventsUpdated() {
 }
 
 function handleEventClick(clickInfo: any) {
-  // Handle event click - could open a modal or navigate to event details
-  console.log('Event clicked:', clickInfo.event);
+  // Debug: print full event details
+  console.log('Event clicked:', {
+    id: clickInfo.event.id,
+    title: clickInfo.event.title,
+    start: clickInfo.event.start,
+    end: clickInfo.event.end,
+    allDay: clickInfo.event.allDay,
+    extendedProps: clickInfo.event.extendedProps,
+    raw: clickInfo.event
+  });
 }
 
 function handleDateSelect(selectInfo: any) {
@@ -322,8 +359,9 @@ defineExpose({
   opacity: 0.8;
 }
 
-:deep(.fc-daygrid-event) {
-  margin-bottom: 1px;
+
+:deep(.fc-daygrid-event-dot) {
+  display: none !important;
 }
 
 :deep(.fc-h-event) {
