@@ -27,7 +27,7 @@ const currentTime = ref('');
 
 function updateTime() {
     const now = new Date();
-    currentTime.value = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit'});
+    currentTime.value = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
 }
 
 onMounted(() => {
