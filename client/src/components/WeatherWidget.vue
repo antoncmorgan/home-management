@@ -8,7 +8,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { getLatLonFromZip, getNWSForecastUrl, getCurrentWeather, getWeatherEmoji } from '../api/weatherApi';
 
 const props = defineProps<{ zipcode: string }>();
@@ -18,9 +18,13 @@ const weatherEmoji = ref('');
 async function fetchWeather(zip: string) {
   weather.value = null;
   const latlon = await getLatLonFromZip(zip);
-  if (!latlon) return;
+  if (!latlon) {
+    return;
+  }
   const forecastUrl = await getNWSForecastUrl(latlon.lat, latlon.lon);
-  if (!forecastUrl) return;
+  if (!forecastUrl) {
+    return;
+  }
   const result = await getCurrentWeather(forecastUrl);
   if (result) {
     weather.value = result;
@@ -28,12 +32,29 @@ async function fetchWeather(zip: string) {
   }
 }
 
+let intervalId: number | undefined;
+
 onMounted(() => {
-  if (props.zipcode) fetchWeather(props.zipcode);
+  if (props.zipcode) {
+    fetchWeather(props.zipcode);
+  }
+  intervalId = window.setInterval(() => {
+    if (props.zipcode) {
+      fetchWeather(props.zipcode);
+    }
+  }, 600000); // 10 minutes
 });
 
 watch(() => props.zipcode, (newZip) => {
-  if (newZip) fetchWeather(newZip);
+  if (newZip) {
+    fetchWeather(newZip);
+  }
+});
+
+onUnmounted(() => {
+  if (intervalId) {
+    clearInterval(intervalId);
+  }
 });
 </script>
 
