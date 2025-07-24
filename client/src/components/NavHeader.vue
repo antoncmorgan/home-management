@@ -3,6 +3,7 @@
         <div class="header-left">
             <div class="header-title">{{ homeName }}</div>
             <div class="header-time">{{ currentTime }}</div>
+            <WeatherWidget v-if="homeZipcode" :zipcode="homeZipcode" class="header-weather" />
         </div>
         <div class="header-right">
         <div v-if="isLoggedIn" class="user-menu-wrapper">
@@ -21,6 +22,7 @@
 </template>
 
 <script setup lang="ts">
+import WeatherWidget from './WeatherWidget.vue';
 const currentTime = ref('');
 
 function updateTime() {
@@ -52,6 +54,7 @@ const homeStore = useHomeStore();
 const isLoggedIn = computed(() => authStore.isLoggedIn);
 const username = computed(() => authStore.username);
 const homeName = computed(() => homeStore.home.value?.display_name || 'My Home');
+const homeZipcode = computed(() => homeStore.home.value?.address_zip || '');
 
 const themeIcon = computed(() => isDark.value ? SunLight : HalfMoon);
 const UserIcon = User;
@@ -122,6 +125,13 @@ defineExpose({
     color: #606060;
     letter-spacing: 0.5px;
     min-width: 4.5rem;
+}
+
+.header-weather {
+    margin-left: 1.2rem;
+    display: inline-flex;
+    align-items: center;
+    font-size: 1.2rem;
 }
 
 .header-right {
