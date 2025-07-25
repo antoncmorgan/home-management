@@ -21,6 +21,18 @@ export async function initDb(filename?: string) {
     password TEXT NOT NULL
   )`);
 
+  // Table for refresh tokens (multiple per user, per device/session)
+  await db.run(`CREATE TABLE IF NOT EXISTS refresh_tokens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    token TEXT NOT NULL,
+    device_info TEXT,
+    expires_at DATETIME NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+  )`);
+
   await db.run(`CREATE TABLE IF NOT EXISTS families (
     id TEXT PRIMARY KEY,
     user_id INTEGER NOT NULL,

@@ -13,6 +13,13 @@ describe('FamilyMember helpers', () => {
     await createUser(db, 'testuser', 'testpass');
   });
 
+  afterAll(async () => {
+    const { db } = require('../src/db');
+    if (db && typeof db.close === 'function') {
+      await db.close();
+    }
+  });
+
   it('should add a new family member', async () => {
     const member = await addFamilyMember(memberData);
     expect(member.id).toBeDefined();

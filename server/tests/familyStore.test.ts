@@ -28,6 +28,14 @@ describe('FamilyStore helpers', () => {
     await createUser(db, 'testuser', 'testpass');
   });
 
+
+  afterAll(async () => {
+    const { db } = require('../src/db');
+    if (db && typeof db.close === 'function') {
+      await db.close();
+    }
+  });
+
   it('should create a new family', async () => {
     const family = { ...baseFamily, id: uuidv4() };
     await createFamily(family);
