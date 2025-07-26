@@ -17,6 +17,12 @@ import { NLayout, NLayoutContent } from 'naive-ui';
 import NavHeader from './components/NavHeader.vue';
 import SideNav from './components/SideNav.vue';
 import { IconoirProvider } from '@iconoir/vue';
+import { onMounted } from 'vue';
+import { useHomeStore } from './store/homeStore';
+
+onMounted(() => {
+  useHomeStore().populateHome();
+});
 
 </script>
 

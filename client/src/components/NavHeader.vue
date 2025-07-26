@@ -51,8 +51,8 @@ const authStore = useAuthStore();
 const homeStore = useHomeStore();
 const isLoggedIn = computed(() => authStore.isLoggedIn);
 const username = computed(() => authStore.username);
-const homeName = computed(() => homeStore.home.value?.display_name || 'My Home');
-const homeZipcode = computed(() => homeStore.home.value?.address_zip || '');
+const homeName = computed(() => homeStore.home.display_name || 'My Home');
+const homeZipcode = computed(() => homeStore.home.address_zip || '');
 
 const themeIcon = computed(() => isDark.value ? SunLight : HalfMoon);
 const UserIcon = User;

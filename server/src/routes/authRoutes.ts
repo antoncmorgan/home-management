@@ -28,8 +28,7 @@ router.post('/logout', requireAuth, async (req, res) => {
     return res.status(400).json({ message: 'Refresh token required' });
   }
   await deleteRefreshToken(refreshToken);
-  // Clear cookies
-  res.clearCookie('accessToken');
+  // Clear refresh token cookie only
   res.clearCookie('refreshToken');
   res.json({ message: 'Logged out' });
 });
@@ -46,8 +45,7 @@ router.post('/logout-all', requireAuth, async (req, res) => {
     await deleteRefreshToken(refreshToken);
   }
   await require('./../store/refreshTokenStore').deleteAllUserRefreshTokens(user.id);
-  // Clear cookies
-  res.clearCookie('accessToken');
+  // Clear refresh token cookie only
   res.clearCookie('refreshToken');
   res.json({ message: 'Logged out from all devices' });
 });
@@ -85,13 +83,7 @@ router.post('/refresh-token', async (req, res) => {
   const newRefreshToken = generateRefreshToken();
   const newExpiry = getRefreshTokenExpiry(7);
   await rotateRefreshToken(refreshToken, newRefreshToken, newExpiry);
-  // Set HttpOnly cookies
-  res.cookie('accessToken', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: tokenExpirySecs * 1000
-  });
+  // Set HttpOnly cookie for refreshToken only
   res.cookie('refreshToken', newRefreshToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -103,7 +95,7 @@ router.post('/refresh-token', async (req, res) => {
     username: userRecord.username,
     expiresIn: tokenExpirySecs
   };
-  res.json(userInfo);
+  res.json({ accessToken: token, ...userInfo });
 });
 
 // Register route
@@ -138,13 +130,7 @@ router.post('/login', async (req, res) => {
   const refreshToken = generateRefreshToken();
   const refreshTokenExpiry = getRefreshTokenExpiry(7); // 7 days
   await createRefreshToken(user.id, refreshToken, deviceInfo, refreshTokenExpiry);
-  // Set HttpOnly cookies
-  res.cookie('accessToken', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: tokenExpirySecs * 1000
-  });
+  // Set HttpOnly cookie for refreshToken only
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -156,7 +142,7 @@ router.post('/login', async (req, res) => {
     username: user.username,
     expiresIn: tokenExpirySecs
   };
-  res.json(userInfo);
+  res.json({ accessToken: token, ...userInfo });
 });
 
 // Return current authenticated user info

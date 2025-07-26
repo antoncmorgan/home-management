@@ -40,7 +40,8 @@ async function onSubmit() {
     const res = await apiPost('/api/auth/login', { username: username.value, password: password.value });
     await authStore.postLoginSetup({
       id: res.data.id,
-      username: res.data.username
+      username: res.data.username,
+      accessToken: res.data.accessToken
     });
     emit('login-success');
   } catch (e: any) {

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { API_BASE_URL } from './api';
+import { useAuthStore } from '../store/authStore';
 
 // Axios instance for auth-aware requests
 export const authApi = axios.create({
@@ -7,8 +8,7 @@ export const authApi = axios.create({
   withCredentials: true, // allow cookies for refresh token
 });
 
-// No localStorage or Authorization header logic needed for HTTP-only cookies
-// All requests will use cookies automatically if withCredentials is true
+// Only refreshToken is handled by cookies; accessToken is in memory and sent in Authorization header
 
 // Intercept 401s and try to refresh
 let isRefreshing = false;
@@ -40,9 +40,10 @@ authApi.interceptors.response.use(
       isRefreshing = true;
       try {
         const res = await axios.post(`${API_BASE_URL}/api/auth/refresh-token`, {}, { withCredentials: true });
-        // No need to set access token, handled by HTTP-only cookies
-        onRefreshed(res.data.token);
-        originalRequest.headers['Authorization'] = 'Bearer ' + res.data.token;
+        // Update access token in authStore
+        useAuthStore().token = res.data.accessToken;
+        onRefreshed(res.data.accessToken);
+        originalRequest.headers['Authorization'] = 'Bearer ' + res.data.accessToken;
         return authApi(originalRequest);
       } catch (refreshError) {
         // No need to clear access token, handled by HTTP-only cookies

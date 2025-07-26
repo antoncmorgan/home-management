@@ -136,7 +136,7 @@ export default defineComponent({
           email: email.value,
           avatar: avatar.value,
           color: color.value,
-          familyId: props.member.familyId || home.value?.id || ''
+          familyId: props.member.familyId || home.id || ''
         });
       } else {
         emit('add', {
@@ -144,7 +144,7 @@ export default defineComponent({
           email: email.value,
           avatar: avatar.value,
           color: color.value,
-          familyId: home.value?.id || ''
+          familyId: home.id || ''
         });
       }
     }

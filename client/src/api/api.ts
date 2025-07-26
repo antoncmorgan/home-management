@@ -1,21 +1,37 @@
 import axios from 'axios';
 
+import { useAuthStore } from '../store/authStore';
+
+function withAuth(config: any = {}): any {
+  const authStore = useAuthStore();
+  config = { ...config, withCredentials: true };
+  if (authStore.token) {
+    config.headers = config.headers || {};
+    config.headers['Authorization'] = 'Bearer ' + authStore.token;
+  }
+  return config;
+}
+
 export const API_BASE_URL = 'http://localhost:3001';
 
 export function apiPost<T = any>(path: string, data?: any, useAuth = true) {
-  return axios.post<T>(`${API_BASE_URL}${path}`, data, useAuth ? { withCredentials: true } : {});
+  const config: any = useAuth ? withAuth() : {};
+  return axios.post<T>(`${API_BASE_URL}${path}`, data, config);
 }
 
 export function apiGet<T = any>(path: string, useAuth = true) {
-  return axios.get<T>(`${API_BASE_URL}${path}`, useAuth ? { withCredentials: true } : {});
+  const config: any = useAuth ? withAuth() : {};
+  return axios.get<T>(`${API_BASE_URL}${path}`, config);
 }
 
 export function apiPut<T = any>(path: string, data?: any, useAuth = true) {
-  return axios.put<T>(`${API_BASE_URL}${path}`, data, useAuth ? { withCredentials: true } : {});
+  const config: any = useAuth ? withAuth() : {};
+  return axios.put<T>(`${API_BASE_URL}${path}`, data, config);
 }
 
 export function apiDelete<T = any>(path: string, useAuth = true) {
-  return axios.delete<T>(`${API_BASE_URL}${path}`, useAuth ? { withCredentials: true } : {});
+  const config: any = useAuth ? withAuth() : {};
+  return axios.delete<T>(`${API_BASE_URL}${path}`, config);
 }
 
 export function apiRedirect(path: string) {

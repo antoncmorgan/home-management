@@ -2,8 +2,12 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
-  // Only check for accessToken in cookies (HTTP-only)
-  const token = req.cookies?.accessToken;
+  // Check for access token in Authorization header
+  const authHeader = req.headers['authorization'];
+  let token = null;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.substring(7);
+  }
   if (!token) {
     return res.status(401).json({ message: 'No token provided' });
   }

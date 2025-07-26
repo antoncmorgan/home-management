@@ -4,7 +4,7 @@ import Home from './components/Home.vue';
 import ProfilePage from './components/ProfilePage.vue';
 
 import { useAuthStore } from './store/authStore';
-import authApi from './api/authApi';
+import { apiGet } from './api/api';
 
 const routes: Array<RouteRecordRaw> = [
   { path: '/', component: AuthPage },
@@ -45,7 +45,7 @@ router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
   let isAuthenticated = false;
   try {
-    const res = await authApi.get('/api/auth/me', { withCredentials: true });
+    const res = await apiGet('/api/auth/me');
     authStore.setUserInfo({
       id: res.data.id,
       username: res.data.username
