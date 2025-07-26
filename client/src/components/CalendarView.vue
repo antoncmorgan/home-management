@@ -34,13 +34,14 @@ import FullCalendar from '@fullcalendar/vue3';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { NCard, NAlert } from 'naive-ui';
+import { NCard } from 'naive-ui';
 import { apiGet } from '../api/api';
 import FamilyMemberNav from './FamilyMemberNav.vue';
 import FamilyMemberModal from './FamilyMemberModal.vue';
 import GoogleCalendarConnect from './GoogleCalendarConnect.vue';
 import { useFamilyMemberStore } from '../store/familyMemberStore';
 import { FamilyMember } from '../models/FamilyMember';
+import { useAuthStore } from '../store/authStore';
 
 const showAddModal = ref(false);
 const selectedFamilyMemberId = ref<string|null>(null);
@@ -52,7 +53,6 @@ const error = ref('');
 const events = ref<any[]>([]);
 
 const showConnectOverlay = ref(true);
-
 
 // Helper: match event to a family member
 function getMatchingMember(event: any, members: FamilyMember[]) {
@@ -216,8 +216,8 @@ function transformGoogleEventsToFullCalendar(googleEvents: any[]) {
 async function fetchEvents(start?: string, end?: string) {
   error.value = '';
   try {
-    const token = localStorage.getItem('token');
-    if (!token) {
+    const authStore = useAuthStore();
+    if (!authStore.isLoggedIn) {
       error.value = 'Please log in to view calendar events';
       return;
     }

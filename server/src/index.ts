@@ -2,6 +2,7 @@
 import 'dotenv/config';
 
 import express from 'express';
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import { initDb } from './db';
 import authRoutes from './routes/authRoutes';
@@ -22,9 +23,13 @@ initDb().then(() => {
   process.exit(1);
 });
 
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true
+}));
 
 app.use(express.json());
+app.use(cookieParser());
 
 app.use('/api/auth', authRoutes);
 
@@ -36,8 +41,6 @@ app.use('/api/google', googleRoutes);
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
-
-// TODO: Add routes for Google Calendar sync and events
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);

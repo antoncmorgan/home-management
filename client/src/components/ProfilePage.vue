@@ -70,6 +70,7 @@ import { EditPencil } from '@iconoir/vue';
 import { useFamilyMemberStore } from '../store/familyMemberStore';
 
 import { ref, onMounted } from 'vue';
+import { useAuthStore } from '../store/authStore';
 import { NLayout, NPageHeader, NCard, NButton } from 'naive-ui';
 import { listFamilies, updateFamily, createFamily } from '../api/familyApi';
 import type { Home } from '../models/Home';
@@ -160,16 +161,9 @@ const form = ref<{
 });
 
 async function fetchProfile() {
-    const token = localStorage.getItem('token');
-    // Parse username from token
-    if (token) {
-        try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            form.value.username = payload.username || payload.name || '';
-        } catch {
-            form.value.username = '';
-        }
-    }
+    // Use authStore for username
+    const authStore = useAuthStore();
+    form.value.username = authStore.username || '';
     // Fetch family info using familyApi
     const result = await listFamilies();
     families.value = result || [];

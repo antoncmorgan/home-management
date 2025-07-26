@@ -3,18 +3,34 @@ import AuthPage from './components/AuthPage.vue';
 import Home from './components/Home.vue';
 import ProfilePage from './components/ProfilePage.vue';
 
+import { useAuthStore } from './store/authStore';
+import authApi from './api/authApi';
+
 const routes: Array<RouteRecordRaw> = [
   { path: '/', component: AuthPage },
-  { path: '/home', component: Home },
-  { path: '/calendar', name: 'calendar', component: Home },
-  { path: '/weather', name: 'weather', component: Home },
-  { path: '/meals', name: 'meals', component: Home },
-  { path: '/settings', name: 'settings', component: Home },
   {
-      path: '/profile',
-      name: 'Profile',
-      component: ProfilePage,
-      meta: { requiresAuth: true }
+    path: '/home', component: Home,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/calendar', name: 'calendar', component: Home,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/weather', name: 'weather', component: Home,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/meals', name: 'meals', component: Home,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/settings', name: 'settings', component: Home,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/profile', name: 'Profile', component: ProfilePage,
+    meta: { requiresAuth: true }
   }
 ];
 
@@ -24,17 +40,25 @@ const router = createRouter({
 });
 
 // Navigation guard for auth protection
-router.beforeEach((to, from, next) => {
-  const publicPaths = ['/'];
-  const token = localStorage.getItem('token');
-  const isPublic = publicPaths.includes(to.path);
 
-  if (!isPublic && !token) {
-    // Not logged in, redirect to login
-    next({ path: '/', query: { redirect: to.fullPath } });
-  } else if (isPublic && token) {
-    // Already logged in, redirect to home
-    next({ path: '/home' });
+router.beforeEach(async (to, from, next) => {
+  const authStore = useAuthStore();
+  let isAuthenticated = false;
+  try {
+    const res = await authApi.get('/api/auth/me', { withCredentials: true });
+    authStore.setUserInfo({
+      id: res.data.id,
+      username: res.data.username
+    });
+    isAuthenticated = true;
+  } catch (e) {
+    isAuthenticated = false;
+  }
+
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    next('/');
+  } else if (isAuthenticated && to.path === '/') {
+    next('/home');
   } else {
     next();
   }

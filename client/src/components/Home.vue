@@ -11,14 +11,15 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { useAuthStore } from '../store/authStore';
 import CalendarView from './CalendarView.vue';
 
+const authStore = useAuthStore();
 const isLoggedIn = ref<boolean>(false);
 const calendarRef = ref();
 
 onMounted(() => {
-  const token = localStorage.getItem('token');
-  isLoggedIn.value = !!token;
+  isLoggedIn.value = authStore.isLoggedIn;
 });
 </script>
 

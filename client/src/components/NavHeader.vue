@@ -33,10 +33,8 @@ function updateTime() {
 onMounted(() => {
     updateTime();
     setInterval(updateTime, 1000);
-    checkAuthStatus();
-    // Listen for storage changes to update auth status
-    window.addEventListener('storage', checkAuthStatus);
 });
+
 import { ref, computed, onMounted } from 'vue';
 import { User } from '@iconoir/vue';
 import { useRouter } from 'vue-router';
@@ -64,14 +62,15 @@ function toggleTheme() {
     // Optionally, persist theme in localStorage or provide to NConfigProvider
 }
 
-function logout() {
-    authStore.logout();
+async function logout() {
+    try {
+        await authStore.logout();
+    } catch (e) {
+        // Optionally handle error (e.g., show notification)
+    }
     router.push('/');
 }
 
-function checkAuthStatus() {
-    authStore.checkAuthStatus();
-}
 const userDropdownOptions = [
     { label: 'Profile', key: 'profile' },
     { label: 'Logout', key: 'logout' }
@@ -85,16 +84,6 @@ function handleUserMenuSelect(key: string) {
     }
 }
 
-onMounted(() => {
-    checkAuthStatus();
-    // Listen for storage changes to update auth status
-    window.addEventListener('storage', checkAuthStatus);
-});
-
-// Expose a method to update auth status from other components
-defineExpose({
-    checkAuthStatus
-});
 </script>
 
 <style scoped>

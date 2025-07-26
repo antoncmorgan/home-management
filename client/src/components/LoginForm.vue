@@ -38,8 +38,10 @@ async function onSubmit() {
   loading.value = true;
   try {
     const res = await apiPost('/api/auth/login', { username: username.value, password: password.value });
-    localStorage.setItem('token', res.data.token);
-    authStore.checkAuthStatus();
+    await authStore.postLoginSetup({
+      id: res.data.id,
+      username: res.data.username
+    });
     emit('login-success');
   } catch (e: any) {
     error.value = e.response?.data?.message || 'Login failed';

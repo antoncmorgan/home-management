@@ -13,6 +13,7 @@
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { apiGet, apiRedirect } from '../api/api';
+import { useAuthStore } from '../store/authStore';
 import { useMessage, NButton, NAlert } from 'naive-ui';
 
 const loading = ref(false);
@@ -29,13 +30,8 @@ const emit = defineEmits<{
 }>();
 
 function connectGoogle() {
-  // Redirect to backend Google auth endpoint with JWT as query param
-  const token = localStorage.getItem('token');
-  if (token) {
-    apiRedirect(`/api/google/auth?token=${encodeURIComponent(token)}`);
-  } else {
-    apiRedirect('/api/google/auth');
-  }
+  // Redirect to backend Google auth endpoint (cookie-based auth)
+  apiRedirect('/api/google/auth');
 }
 
 async function checkCalendarConnection() {
@@ -56,7 +52,8 @@ async function checkCalendarConnection() {
 }
 
 onMounted(async () => {
-  isLoggedIn.value = !!localStorage.getItem('token');
+  const authStore = useAuthStore();
+  isLoggedIn.value = authStore.isLoggedIn;
   if (isLoggedIn.value) {
     await checkCalendarConnection();
   }

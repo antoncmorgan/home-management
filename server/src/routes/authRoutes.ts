@@ -11,29 +11,52 @@ import { requireAuth } from './requireAuth';
 
 const router = express.Router();
 
-// Logout route (single device)
-router.post('/logout', async (req, res) => {
-  const { refreshToken = '' } = req.body;
+export type AuthUserInfo = {
+  id: string;
+  username: string;
+  expiresIn?: number;
+};
+
+const tokenExpirySecs = 15 * 60;
+const daySecs = 24 * 60 * 60;
+const refreshTokenExpiryDays = 7;
+
+// Logout route (single device, requires auth, uses cookie)
+router.post('/logout', requireAuth, async (req, res) => {
+  const refreshToken = req.cookies?.refreshToken || '';
   if (!refreshToken) {
     return res.status(400).json({ message: 'Refresh token required' });
   }
   await deleteRefreshToken(refreshToken);
+  // Clear cookies
+  res.clearCookie('accessToken');
+  res.clearCookie('refreshToken');
   res.json({ message: 'Logged out' });
 });
 
-// Global logout route (all devices)
-router.post('/logout-all', async (req, res) => {
-  const { userId } = req.body;
-  if (!userId) {
-    return res.status(400).json({ message: 'User ID required' });
+// Global logout route (all devices, requires auth, uses cookie)
+router.post('/logout-all', requireAuth, async (req, res) => {
+  const user = (req as any).user;
+  if (!user || !user.id) {
+    return res.status(401).json({ message: 'User not authenticated' });
   }
-  await require('./../store/refreshTokenStore').deleteAllUserRefreshTokens(userId);
+  // Optionally, also delete the current device's refresh token
+  const refreshToken = req.cookies?.refreshToken || '';
+  if (refreshToken) {
+    await deleteRefreshToken(refreshToken);
+  }
+  await require('./../store/refreshTokenStore').deleteAllUserRefreshTokens(user.id);
+  // Clear cookies
+  res.clearCookie('accessToken');
+  res.clearCookie('refreshToken');
   res.json({ message: 'Logged out from all devices' });
 });
 
 // Refresh token endpoint
 router.post('/refresh-token', async (req, res) => {
-  const { refreshToken = '', deviceInfo = '' } = req.body;
+  // Get refresh token from cookie
+  const refreshToken = req.cookies?.refreshToken || '';
+  const deviceInfo = req.body.deviceInfo || '';
   if (!refreshToken) {
     return res.status(400).json({ message: 'Refresh token required' });
   }
@@ -62,7 +85,25 @@ router.post('/refresh-token', async (req, res) => {
   const newRefreshToken = generateRefreshToken();
   const newExpiry = getRefreshTokenExpiry(7);
   await rotateRefreshToken(refreshToken, newRefreshToken, newExpiry);
-  res.json({ token, refreshToken: newRefreshToken, expiresIn: 900 });
+  // Set HttpOnly cookies
+  res.cookie('accessToken', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: tokenExpirySecs * 1000
+  });
+  res.cookie('refreshToken', newRefreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: refreshTokenExpiryDays * daySecs * 1000
+  });
+  const userInfo: AuthUserInfo = {
+    id: userRecord.id,
+    username: userRecord.username,
+    expiresIn: tokenExpirySecs
+  };
+  res.json(userInfo);
 });
 
 // Register route
@@ -97,13 +138,38 @@ router.post('/login', async (req, res) => {
   const refreshToken = generateRefreshToken();
   const refreshTokenExpiry = getRefreshTokenExpiry(7); // 7 days
   await createRefreshToken(user.id, refreshToken, deviceInfo, refreshTokenExpiry);
-  res.json({ token, refreshToken, expiresIn: 900 }); // 900s = 15m
+  // Set HttpOnly cookies
+  res.cookie('accessToken', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: tokenExpirySecs * 1000
+  });
+  res.cookie('refreshToken', refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: refreshTokenExpiryDays * daySecs * 1000
+  });
+  const userInfo: AuthUserInfo = {
+    id: user.id,
+    username: user.username,
+    expiresIn: tokenExpirySecs
+  };
+  res.json(userInfo);
 });
 
 // Return current authenticated user info
 router.get('/me', requireAuth, (req, res) => {
   const user = (req as any).user;
-  res.json({ id: user.id, username: user.username });
+  if (!user) {
+    return res.status(401).json({ error: 'User not authenticated' });
+  }
+  const userInfo: AuthUserInfo = {
+    id: user.id,
+    username: user.username
+  };
+  res.json(userInfo);
 });
 
 export default router;
