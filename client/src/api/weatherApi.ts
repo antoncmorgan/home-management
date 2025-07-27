@@ -1,24 +1,6 @@
 import axios from 'axios';
 
-// Type for weather data
-export type WeatherData = {
-    temperature: number | null;
-    high: number | null;
-    low: number | null;
-    shortForecast: string;
-};
-
-// Get weather emoji based on short forecast
-export function getWeatherEmoji(shortForecast: string): string {
-    const forecast = shortForecast.toLowerCase();
-    if (forecast.includes('sunny') || forecast.includes('clear')) return '☀️';
-    if (forecast.includes('cloud')) return '☁️';
-    if (forecast.includes('rain') || forecast.includes('showers')) return '🌧️';
-    if (forecast.includes('snow')) return '❄️';
-    if (forecast.includes('storm') || forecast.includes('thunder')) return '⛈️';
-    if (forecast.includes('fog')) return '🌫️';
-    return '🌡️';
-}
+import type { WeatherData, HourlyForecast, DailyForecast } from '../models/weatherModel';
 
 // Get lat/lon from zipcode using OpenStreetMap Nominatim
 export async function getLatLonFromZip(zip: string): Promise<{ lat: number; lon: number } | null> {
@@ -37,12 +19,13 @@ export async function getLatLonFromZip(zip: string): Promise<{ lat: number; lon:
 }
 
 // Get daily forecast (for high/low, current temp, and shortForecast)
-export async function getDailyForecast(forecastUrl: string | null): Promise<WeatherData> {
+export async function getDailyForecast(forecastUrl: string | null, days: number = 1): Promise<WeatherData> {
     let weatherData: WeatherData = {
         high: null,
         low: null,
         temperature: null,
-        shortForecast: ''
+        shortForecast: '',
+        dailyPeriods: [] as DailyForecast[]
     };
     try {
         if (!forecastUrl) {
@@ -69,6 +52,42 @@ export async function getDailyForecast(forecastUrl: string | null): Promise<Weat
                 }
             }
         }
+        // Add daily periods with hi/lo logic
+        weatherData.dailyPeriods = [];
+        // Group periods by date
+        const periodGroups: { [date: string]: any[] } = {};
+        for (const p of periods) {
+            const date = new Date(p.startTime).toLocaleDateString('en-US', { timeZone: 'America/New_York' });
+            if (!periodGroups[date]) periodGroups[date] = [];
+            periodGroups[date].push(p);
+        }
+        const groupDates = Object.keys(periodGroups).slice(0, days);
+        for (const date of groupDates) {
+            const group = periodGroups[date];
+            let hi: number | null = null;
+            let lo: number | null = null;
+            let precip = 0;
+            let condition = '';
+            for (const p of group) {
+                if (p.isDaytime && (hi === null || p.temperature > hi)) {
+                    hi = p.temperature;
+                }
+                if (!p.isDaytime && (lo === null || p.temperature < lo)) {
+                    lo = p.temperature;
+                }
+                // Use first period's condition for the day
+                if (!condition) condition = p.shortForecast;
+                // Use max precip for the day
+                if (p.probabilityOfPrecipitation?.value > precip) precip = p.probabilityOfPrecipitation.value;
+            }
+            weatherData.dailyPeriods.push({
+                date,
+                hi: hi ?? null,
+                lo: lo ?? null,
+                precip,
+                condition
+            });
+        }
         return weatherData;
     } catch (e) {
         return weatherData;
@@ -86,16 +105,37 @@ export async function getLatestObservation(stationId: string): Promise<{ tempera
     }
 }
 
-export async function getWeatherData(zip: string): Promise<WeatherData | null> {
+export async function getWeatherData(zip: string, opts?: { days?: number; hourly?: boolean }): Promise<WeatherData | null> {
     const latlon = await getLatLonFromZip(zip);
     if (!latlon) {
         return null;
     }
+    const days = opts?.days ?? 1;
+    const wantHourly = opts?.hourly ?? false;
     try {
         const pointsRes = await axios.get(`https://api.weather.gov/points/${latlon.lat},${latlon.lon}`);
         const forecastUrl = pointsRes.data.properties?.forecast;
+        const forecastHourlyUrl = pointsRes.data.properties?.forecastHourly;
         const stationsUrl = pointsRes.data.properties?.observationStations;
-        let weatherData = await getDailyForecast(forecastUrl);
+        let weatherData = await getDailyForecast(forecastUrl, days);
+
+        // Fetch hourly forecast
+        if (wantHourly && forecastHourlyUrl) {
+            try {
+                const hourlyRes = await axios.get(forecastHourlyUrl);
+                const periods = hourlyRes.data.properties?.periods;
+                if (periods && periods.length > 0) {
+                    weatherData.hourly = periods.slice(0, 12).map((p: any): HourlyForecast => ({
+                        hour: p.startTime,
+                        temp: p.temperature ?? null,
+                        precip: p.probabilityOfPrecipitation?.value ?? 0,
+                        condition: p.shortForecast
+                    }));
+                }
+            } catch (e) {
+                // Ignore hourly errors
+            }
+        }
 
         if (stationsUrl) {
             const stationsRes = await axios.get(stationsUrl);
@@ -110,6 +150,8 @@ export async function getWeatherData(zip: string): Promise<WeatherData | null> {
                 }
             }
         }
+        // Attach pointsRes for city/state extraction
+        (weatherData as any)._pointsRes = pointsRes;
         return weatherData;
     } catch (e) {
         return null;

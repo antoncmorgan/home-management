@@ -3,6 +3,8 @@ import AuthView from './views/Auth.vue';
 import HomeView from './views/Home.vue';
 import ProfileView from './views/Profile.vue';
 
+import WeatherView from './views/Weather.vue';
+
 import { useAuthStore } from './store/authStore';
 import { apiGet } from './api/api';
 
@@ -17,7 +19,7 @@ const routes: Array<RouteRecordRaw> = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/weather', name: 'weather', component: HomeView,
+    path: '/weather', name: 'weather', component: WeatherView,
     meta: { requiresAuth: true }
   },
   {

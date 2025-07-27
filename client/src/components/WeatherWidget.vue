@@ -19,7 +19,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue';
-import { getWeatherData, getWeatherEmoji } from '../api/weatherApi';
+import { getWeatherData } from '../api/weatherApi';
+import { getWeatherEmoji } from '../utils/weatherUtils';
 
 const props = defineProps<{ zipcode: string }>();
 const weather = ref<{ temperature: number | null; high: number | null; low: number | null; shortForecast: string } | null>(null);

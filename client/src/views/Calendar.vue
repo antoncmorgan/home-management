@@ -271,7 +271,7 @@ defineExpose({
 }
 
 .calendar-wrapper {
-  margin-top: 1rem;
+  margin-top: 0rem;
   height: calc(100vh - var(--top-nav-height) - 4rem);
 }
 
