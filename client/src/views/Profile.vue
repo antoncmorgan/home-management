@@ -64,8 +64,8 @@
 </template>
 
 <script setup lang="ts">
-import FamilyMemberIcon from './FamilyMemberIcon.vue';
-import FamilyMemberModal from './FamilyMemberModal.vue';
+import FamilyMemberIcon from '../components/FamilyMemberIcon.vue';
+import FamilyMemberModal from '../components/FamilyMemberModal.vue';
 import { EditPencil } from '@iconoir/vue';
 import { useFamilyMemberStore } from '../store/familyMemberStore';
 
@@ -75,7 +75,7 @@ import { NLayout, NPageHeader, NCard, NButton } from 'naive-ui';
 import { listFamilies, updateFamily, createFamily } from '../api/familyApi';
 import type { Home } from '../models/Home';
 import type { FamilyMember } from '../models/FamilyMember';
-import HomeForm from './HomeForm.vue';
+import HomeForm from '../components/HomeForm.vue';
 
 const showEditForm = ref(false);
 let editingFamilyId: string | null = null;

@@ -16,8 +16,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import LoginForm from './LoginForm.vue';
-import RegisterForm from './RegisterForm.vue';
+import LoginForm from '../components/LoginForm.vue';
+import RegisterForm from '../components/RegisterForm.vue';
 import { useRouter } from 'vue-router';
 import { NCard, NTabs, NTab } from 'naive-ui';
 

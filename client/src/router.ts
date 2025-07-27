@@ -1,35 +1,35 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
-import AuthPage from './components/AuthPage.vue';
-import Home from './components/Home.vue';
-import ProfilePage from './components/ProfilePage.vue';
+import AuthView from './views/Auth.vue';
+import HomeView from './views/Home.vue';
+import ProfileView from './views/Profile.vue';
 
 import { useAuthStore } from './store/authStore';
 import { apiGet } from './api/api';
 
 const routes: Array<RouteRecordRaw> = [
-  { path: '/', component: AuthPage },
+  { path: '/', component: AuthView },
   {
-    path: '/home', component: Home,
+    path: '/home', component: HomeView,
     meta: { requiresAuth: true }
   },
   {
-    path: '/calendar', name: 'calendar', component: Home,
+    path: '/calendar', name: 'calendar', component: HomeView,
     meta: { requiresAuth: true }
   },
   {
-    path: '/weather', name: 'weather', component: Home,
+    path: '/weather', name: 'weather', component: HomeView,
     meta: { requiresAuth: true }
   },
   {
-    path: '/meals', name: 'meals', component: Home,
+    path: '/meals', name: 'meals', component: HomeView,
     meta: { requiresAuth: true }
   },
   {
-    path: '/settings', name: 'settings', component: Home,
+    path: '/settings', name: 'settings', component: HomeView,
     meta: { requiresAuth: true }
   },
   {
-    path: '/profile', name: 'Profile', component: ProfilePage,
+    path: '/profile', name: 'Profile', component: ProfileView,
     meta: { requiresAuth: true }
   }
 ];
