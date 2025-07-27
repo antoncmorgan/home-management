@@ -1,8 +1,10 @@
 <template>
   <div class="weather-view-container">
+    <div class="weather-bg" :style="bgStyle"></div>
     <div class="weather-location-row">
       <h2>{{ city }}, {{ state }}</h2>
     </div>
+    <div class="weather-emoji-bg" :style="emojiStyle">{{ moodEmoji }}</div>
     <HourlyForecastRow :hourly="hourlyForecast" />
     <DailyForecastRow :daily="dailyForecast" />
   </div>
@@ -13,10 +15,12 @@
 import HourlyForecastRow from '../components/HourlyForecastRow.vue';
 import DailyForecastRow from '../components/DailyForecastRow.vue';
 import type { Ref } from 'vue';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { getWeatherData } from '../api/weatherApi';
 import { storeToRefs } from 'pinia';
 import { useHomeStore } from '../store/homeStore';
+
+import { moodMap } from '../utils/weatherUtils';
 import type { HourlyForecast, DailyForecast } from '../models/weatherModel';
 
 const city = ref('Sample City');
@@ -25,8 +29,44 @@ const homeStore = useHomeStore();
 const { home } = storeToRefs(homeStore);
 const hourlyForecast: Ref<HourlyForecast[]> = ref([]);
 const dailyForecast: Ref<DailyForecast[]> = ref([]);
+
 const loading = ref(false);
 const error = ref('');
+
+
+const currentHourCondition = computed(() => {
+  if (!hourlyForecast.value.length) return 'Default';
+  const now = new Date();
+  // Find the closest hour
+  const current = hourlyForecast.value.find(h => {
+    const hourDate = new Date(h.hour);
+    return hourDate.getHours() === now.getHours();
+  });
+  return current?.condition || 'Default';
+});
+
+const moodEmoji = computed(() => {
+  const cond = currentHourCondition.value;
+  const now = new Date();
+  const hour = now.getHours();
+  const isNight = hour < 6 || hour >= 19;
+  for (const key in moodMap) {
+    if (cond.toLowerCase().includes(key.toLowerCase())) {
+      return isNight ? moodMap[key].night : moodMap[key].day;
+    }
+  }
+  return isNight ? moodMap.Default.night : moodMap.Default.day;
+});
+
+const bgStyle = computed(() => {
+  const cond = currentHourCondition.value;
+  for (const key in moodMap) {
+    if (cond.toLowerCase().includes(key.toLowerCase())) {
+      return `background:${moodMap[key].bg};`;
+    }
+  }
+  return `background:${moodMap.Default.bg};`;
+});
 
 async function fetchWeather() {
   loading.value = true;
@@ -94,15 +134,43 @@ onMounted(() => {
 
 <style scoped>
 .weather-view-container {
-  width: 100%;
+  height: calc(100vh - var(--top-nav-height));
   margin: 0 auto;
   padding: 2rem 1rem;
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  z-index: 0;
+  position: relative;
+}
+
+.weather-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  opacity: 0.2;
 }
 
 .weather-location-row {
+  text-align: center;
+}
+.weather-emoji-bg {
+  position: absolute;
+  opacity: 0.8;
+  color: rgba(0, 0, 0, 0.15);
+  background-color: transparent;
+  top: 3rem;
+  left: 4rem;
+  transform: translate(-50%, -50%);
+  font-size: 24vw;
+  z-index: -1;
+  pointer-events: none;
+  user-select: none;
+  width: 1em;
+  height: 1em;
   text-align: center;
 }
 </style>
