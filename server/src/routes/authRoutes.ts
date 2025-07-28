@@ -52,50 +52,55 @@ router.post('/logout-all', requireAuth, async (req, res) => {
 
 // Refresh token endpoint
 router.post('/refresh-token', async (req, res) => {
-  // Get refresh token from cookie
-  const refreshToken = req.cookies?.refreshToken || '';
-  const deviceInfo = req.body.deviceInfo || '';
-  if (!refreshToken) {
-    return res.status(400).json({ message: 'Refresh token required' });
+  try {
+    // Get refresh token from cookie
+    const refreshToken = req.cookies?.refreshToken || '';
+    const deviceInfo = req.body?.deviceInfo || '';
+    if (!refreshToken) {
+      return res.status(400).json({ message: 'Refresh token required' });
+    }
+    const tokenRecord = await findRefreshToken(refreshToken);
+    if (!tokenRecord) {
+      return res.status(401).json({ message: 'Invalid refresh token' });
+    }
+    // Check expiry
+    if (new Date(tokenRecord.expires_at) < new Date()) {
+      await deleteRefreshToken(refreshToken);
+      return res.status(401).json({ message: 'Refresh token expired' });
+    }
+    // Issue new access token
+    const userId = tokenRecord.user_id;
+    const user = await findUserByUsername(db, tokenRecord.username || '');
+    // If user lookup by username fails, fallback to user id
+    let userRecord = user;
+    if (!userRecord) {
+      userRecord = await db.get('SELECT * FROM users WHERE id = ?', userId);
+    }
+    if (!userRecord) {
+      return res.status(401).json({ message: 'User not found' });
+    }
+    const token = jwt.sign({ id: userRecord.id, username: userRecord.username }, process.env.JWT_SECRET || 'secret', { expiresIn: '15m' });
+    // Rotate refresh token
+    const newRefreshToken = generateRefreshToken();
+    const newExpiry = getRefreshTokenExpiry(7);
+    await rotateRefreshToken(refreshToken, newRefreshToken, newExpiry);
+    // Set HttpOnly cookie for refreshToken only
+    res.cookie('refreshToken', newRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: refreshTokenExpiryDays * daySecs * 1000
+    });
+    const userInfo: AuthUserInfo = {
+      id: userRecord.id,
+      username: userRecord.username,
+      expiresIn: tokenExpirySecs
+    };
+    res.json({ accessToken: token, ...userInfo });
+  } catch (err: any) {
+    console.error('Refresh token error:', err);
+    res.status(500).json({ message: 'Internal server error', error: err.message });
   }
-  const tokenRecord = await findRefreshToken(refreshToken);
-  if (!tokenRecord) {
-    return res.status(401).json({ message: 'Invalid refresh token' });
-  }
-  // Check expiry
-  if (new Date(tokenRecord.expires_at) < new Date()) {
-    await deleteRefreshToken(refreshToken);
-    return res.status(401).json({ message: 'Refresh token expired' });
-  }
-  // Issue new access token
-  const userId = tokenRecord.user_id;
-  const user = await findUserByUsername(db, tokenRecord.username || '');
-  // If user lookup by username fails, fallback to user id
-  let userRecord = user;
-  if (!userRecord) {
-    userRecord = await db.get('SELECT * FROM users WHERE id = ?', userId);
-  }
-  if (!userRecord) {
-    return res.status(401).json({ message: 'User not found' });
-  }
-  const token = jwt.sign({ id: userRecord.id, username: userRecord.username }, process.env.JWT_SECRET || 'secret', { expiresIn: '15m' });
-  // Rotate refresh token
-  const newRefreshToken = generateRefreshToken();
-  const newExpiry = getRefreshTokenExpiry(7);
-  await rotateRefreshToken(refreshToken, newRefreshToken, newExpiry);
-  // Set HttpOnly cookie for refreshToken only
-  res.cookie('refreshToken', newRefreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: refreshTokenExpiryDays * daySecs * 1000
-  });
-  const userInfo: AuthUserInfo = {
-    id: userRecord.id,
-    username: userRecord.username,
-    expiresIn: tokenExpirySecs
-  };
-  res.json({ accessToken: token, ...userInfo });
 });
 
 // Register route
