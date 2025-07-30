@@ -1,6 +1,6 @@
 <template>
   <div class="google-calendar-connect">
-    <n-button v-if="isLoggedIn && !isCalendarConnected" type="primary" @click="connectGoogle" :loading="loading">
+    <n-button v-if="isLoggedIn && showButton" type="primary" @click="connectGoogle" :loading="loading">
       Connect Google Calendar
     </n-button>
     <n-alert v-if="error" type="error" style="margin-top: 0.5rem;">
@@ -17,6 +17,7 @@ import { useAuthStore } from '../store/authStore';
 import { useMessage, NButton, NAlert } from 'naive-ui';
 
 const loading = ref(false);
+const showButton = ref(false);
 const error = ref('');
 const isLoggedIn = ref(false);
 const isCalendarConnected = ref(false);
@@ -30,23 +31,38 @@ const emit = defineEmits<{
 }>();
 
 function connectGoogle() {
-  // Redirect to backend Google auth endpoint (cookie-based auth)
-  apiRedirect('/api/google/auth');
+  // Redirect to backend Google auth endpoint, passing access token as state
+  const authStore = useAuthStore();
+  const token = authStore.token;
+  // Pass token as state param for Google OAuth
+  apiRedirect(`/api/google/auth?token=${encodeURIComponent(token)}`);
 }
 
 async function checkCalendarConnection() {
-  loading.value = true;
+  let loadingTimeout: ReturnType<typeof setTimeout> | null = null;
   error.value = '';
+  loading.value = false;
+  showButton.value = false;
   try {
+    loadingTimeout = setTimeout(() => {
+      loading.value = true;
+      showButton.value = true;
+    }, 5000);
     const res = await apiGet('/api/google/calendars');
-    // If calendars are returned, consider Google Calendar connected
     isCalendarConnected.value = Array.isArray(res.data.items) && res.data.items.length > 0;
     emit('calendarConnected', isCalendarConnected.value);
+    if (!isCalendarConnected.value) {
+      showButton.value = true;
+    }
   } catch (e: any) {
     error.value = e.response?.data?.error || 'Failed to check calendar connection';
     isCalendarConnected.value = false;
     emit('calendarConnected', false);
+    showButton.value = true;
   } finally {
+    if (loadingTimeout) {
+      clearTimeout(loadingTimeout);
+    }
     loading.value = false;
   }
 }

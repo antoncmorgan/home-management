@@ -25,13 +25,13 @@ export const useFamilyMemberStore = defineStore('familyMember', () => {
     familyMembers.value.push(newMember);
   }
 
-  async function update(id: number, member: Partial<FamilyMember>) {
+  async function update(id: string, member: Partial<FamilyMember>) {
     const updated = await updateFamilyMember(id, member);
     const idx = familyMembers.value.findIndex(m => m.id === id);
     if (idx !== -1) familyMembers.value[idx] = updated;
   }
 
-  async function remove(id: number) {
+  async function remove(id: string) {
     await deleteFamilyMember(id);
     familyMembers.value = familyMembers.value.filter(m => m.id !== id);
   }

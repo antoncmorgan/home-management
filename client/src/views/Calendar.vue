@@ -28,56 +28,31 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive, computed } from 'vue';
+import { ref, onMounted, reactive } from 'vue';
 import { storeToRefs } from 'pinia';
 import FullCalendar from '@fullcalendar/vue3';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { NCard } from 'naive-ui';
-import { apiGet } from '../api/api';
 import FamilyMemberNav from '../components/FamilyMemberNav.vue';
 import FamilyMemberModal from '../components/FamilyMemberModal.vue';
 import GoogleCalendarConnect from '../components/GoogleCalendarConnect.vue';
 import { useFamilyMemberStore } from '../store/familyMemberStore';
-import { FamilyMember } from '../models/FamilyMember';
-import { useAuthStore } from '../store/authStore';
+import { useCalendarStore } from '../store/calendarStore';
 
 const showAddModal = ref(false);
-const selectedFamilyMemberId = ref<string|null>(null);
+const calendarRef = ref();
+const showConnectOverlay = ref(false);
+
 const familyMemberStore = useFamilyMemberStore();
 const { familyMembers } = storeToRefs(familyMemberStore);
 
-const calendarRef = ref();
-const error = ref('');
-const events = ref<any[]>([]);
-
-const showConnectOverlay = ref(true);
-
-// Helper: match event to a family member
-function getMatchingMember(event: any, members: FamilyMember[]) {
-  // First, try to match by name
-  for (const member of members) {
-    if (event.title && event.title.toLowerCase().includes(member.name.toLowerCase())) {
-      return member;
-    }
-  }
-  // Then, try to match by organizer or creator email
-  for (const member of members) {
-    const organizerEmail = event.extendedProps?.organizer?.email || '';
-    const creatorEmail = event.extendedProps?.creator?.email || '';
-    if (member.email && (
-      (organizerEmail && member.email.toLowerCase() === organizerEmail.toLowerCase()) ||
-      (creatorEmail && member.email.toLowerCase() === creatorEmail.toLowerCase())
-    )) {
-      return member;
-    }
-  }
-  return null;
-}
+const calendarStore = useCalendarStore();
+const { filteredEvents, selectedFamilyMemberId, error } = storeToRefs(calendarStore);
+const { fetchEvents, setSelectedFamilyMemberId, getMatchingMember } = calendarStore;
 
 function handleCalendarConnectStatus(isConnected: boolean) {
-  // Only update if value actually changes
   if (showConnectOverlay.value !== !isConnected) {
     showConnectOverlay.value = !isConnected;
   }
@@ -86,18 +61,8 @@ function handleCalendarConnectStatus(isConnected: boolean) {
 onMounted(() => {
   familyMemberStore.loadFamilyMembers();
 });
-// Filter events by selected family member if set
-const filteredEvents = computed(() => {
-  if (!selectedFamilyMemberId.value) return events.value;
-  // Filter events by matching member
-  return events.value.filter(e => {
-    const member = getMatchingMember(e, familyMembers.value);
-    return member && member.id === selectedFamilyMemberId.value;
-  });
-});
 
 function getRangeFromCalendar(info: any) {
-  // info.start and info.end are the first and last visible dates in the current view
   return {
     start: info.start.toISOString(),
     end: info.end.toISOString()
@@ -126,7 +91,6 @@ const calendarOptions = reactive({
   eventClassNames: ['custom-event'],
   eventDidMount: (info: any) => {
     info.el.setAttribute('title', info.event.title);
-    // Lower opacity for events that end before today
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const eventEnd = info.event.end ? new Date(info.event.end) : new Date(info.event.start);
@@ -134,7 +98,6 @@ const calendarOptions = reactive({
     if (eventEnd < today) {
       info.el.classList.add('fc-event-before-today');
     }
-    // Color event by matching member
     const matchedMember = getMatchingMember(info.event, familyMembers.value);
     if (matchedMember && matchedMember.color) {
       info.el.style.backgroundColor = matchedMember.color;
@@ -146,27 +109,27 @@ const calendarOptions = reactive({
     await fetchEvents(start, end);
   }
 });
-function handleAddMember(member: FamilyMember) {
+
+function handleAddMember(member: any) {
   familyMemberStore.add(member);
   showAddModal.value = false;
 }
-function handleSelectMember(member: FamilyMember) {
-  if (selectedFamilyMemberId.value === member.id) {
-    selectedFamilyMemberId.value = null;
+
+function handleSelectMember(member: any) {
+  if (String(selectedFamilyMemberId.value) === String(member.id)) {
+    setSelectedFamilyMemberId(null);
   } else {
-    selectedFamilyMemberId.value = member.id;
+    setSelectedFamilyMemberId(member.id);
   }
 }
 
 function handleEventsUpdated() {
-  // Refresh the calendar when events are updated
   if (calendarRef.value) {
     calendarRef.value.refreshEvents();
   }
 }
 
 function handleEventClick(clickInfo: any) {
-  // Debug: print full event details
   console.log('Event clicked:', {
     id: clickInfo.event.id,
     title: clickInfo.event.title,
@@ -179,69 +142,17 @@ function handleEventClick(clickInfo: any) {
 }
 
 function handleDateSelect(selectInfo: any) {
-  // Handle date selection - could open a modal to create new event
   console.log('Date selected:', selectInfo);
 }
 
 function handleEventDrop(dropInfo: any) {
-  // Handle event drag and drop
   console.log('Event dropped:', dropInfo);
 }
 
 function handleEventResize(resizeInfo: any) {
-  // Handle event resize
   console.log('Event resized:', resizeInfo);
 }
 
-function transformGoogleEventsToFullCalendar(googleEvents: any[]) {
-  return googleEvents.map(event => ({
-    id: event.id,
-    title: event.summary || 'No Title',
-    start: event.start?.dateTime || event.start?.date,
-    end: event.end?.dateTime || event.end?.date,
-    allDay: !event.start?.dateTime, // All-day if no specific time
-    backgroundColor: event.colorId ? `#${event.colorId}` : '#3788d8',
-    borderColor: event.colorId ? `#${event.colorId}` : '#3788d8',
-    extendedProps: {
-      description: event.description,
-      location: event.location,
-      creator: event.creator,
-      organizer: event.organizer,
-      attendees: event.attendees,
-      htmlLink: event.htmlLink
-    }
-  }));
-}
-
-async function fetchEvents(start?: string, end?: string) {
-  error.value = '';
-  try {
-    const authStore = useAuthStore();
-    if (!authStore.isLoggedIn) {
-      error.value = 'Please log in to view calendar events';
-      return;
-    }
-    let url = '/api/google/events/month';
-    if (start && end) {
-      url += `?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`;
-    }
-    const res = await apiGet(url);
-    const googleEvents = res.data.items || [];
-    events.value = transformGoogleEventsToFullCalendar(googleEvents);
-  } catch (e: any) {
-    error.value = e.response?.data?.error || 'Failed to fetch calendar events';
-    console.error('Error fetching events:', e);
-  }
-}
-
-onMounted(async () => {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999).toISOString();
-  await fetchEvents(start, end);
-});
-
-// Expose methods for parent components
 defineExpose({
   refreshEvents: fetchEvents,
   getCalendarApi: () => calendarRef.value?.getApi()

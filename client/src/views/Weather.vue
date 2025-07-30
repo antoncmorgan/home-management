@@ -4,7 +4,7 @@
     <div class="weather-location-row">
       <h2>{{ city }}, {{ state }}</h2>
     </div>
-    <div class="weather-emoji-bg" :style="emojiStyle">{{ moodEmoji }}</div>
+    <div class="weather-emoji-bg">{{ moodEmoji }}</div>
     <HourlyForecastRow :hourly="hourlyForecast" />
     <DailyForecastRow :daily="dailyForecast" />
   </div>
