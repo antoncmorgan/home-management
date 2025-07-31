@@ -2,7 +2,7 @@
   <div class="weather-view-container">
     <div class="weather-bg" :style="bgStyle"></div>
     <div class="weather-location-row">
-      <h2>{{ city }}, {{ state }}</h2>
+      <h2>{{ city }}{{ state ? `, ${state}` : '' }}</h2>
     </div>
     <div class="weather-emoji-bg">{{ moodEmoji }}</div>
     <HourlyForecastRow :hourly="hourlyForecast" />
@@ -15,7 +15,7 @@
 import HourlyForecastRow from '../components/HourlyForecastRow.vue';
 import DailyForecastRow from '../components/DailyForecastRow.vue';
 import type { Ref } from 'vue';
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { getWeatherData } from '../api/weatherApi';
 import { storeToRefs } from 'pinia';
 import { useHomeStore } from '../store/homeStore';
@@ -23,8 +23,8 @@ import { useHomeStore } from '../store/homeStore';
 import { moodMap } from '../utils/weatherUtils';
 import type { HourlyForecast, DailyForecast } from '../models/weatherModel';
 
-const city = ref('Sample City');
-const state = ref('CA');
+const city = ref('');
+const state = ref('');
 const homeStore = useHomeStore();
 const { home } = storeToRefs(homeStore);
 const hourlyForecast: Ref<HourlyForecast[]> = ref([]);
@@ -128,7 +128,21 @@ async function fetchWeather() {
 }
 
 onMounted(() => {
-  fetchWeather();
+  // Only fetch weather when home.value is loaded
+  if (home.value && home.value.address_zip) {
+    fetchWeather();
+  } else {
+    // Watch for home.value to be set, then fetch weather
+    const stop = watch(
+      () => home.value?.address_zip,
+      (zip) => {
+        if (zip) {
+          fetchWeather();
+          stop(); // Stop watching after first fetch
+        }
+      }
+    );
+  }
 });
 </script>
 
