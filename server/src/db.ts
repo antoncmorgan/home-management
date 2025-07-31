@@ -80,4 +80,33 @@ export async function initDb(filename?: string) {
     FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY(family_id) REFERENCES families(id) ON DELETE CASCADE
   )`);
+
+  await db.run(`CREATE TABLE IF NOT EXISTS meal_plans (
+    id TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    date TEXT NOT NULL,
+    meal_id TEXT NOT NULL,
+    family_id TEXT NOT NULL,
+    member_id TEXT,
+    type TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY(family_id) REFERENCES families(id) ON DELETE CASCADE,
+    FOREIGN KEY(meal_id) REFERENCES meals(id) ON DELETE CASCADE,
+    FOREIGN KEY(member_id) REFERENCES family_members(id) ON DELETE SET NULL
+  )`);
+
+  await db.run(`CREATE TABLE IF NOT EXISTS meals (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    type TEXT NOT NULL,
+    image_url TEXT,
+    ingredients TEXT NOT NULL,
+    cook_time INTEGER,
+    recipe TEXT,
+    description TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
 }
