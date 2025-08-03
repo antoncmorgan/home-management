@@ -10,6 +10,7 @@ import authRoutes from './routes/authRoutes';
 import familyMemberRoutes from './routes/familyMemberRoutes';
 import googleRoutes from './routes/googleRoutes';
 import familyRoutes from './routes/familyRoutes';
+import listRoutes from './routes/listRoutes';
 
 
 const app = express();
@@ -36,6 +37,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/family-members', familyMemberRoutes);
 app.use('/api/families', familyRoutes);
 app.use('/api/google', googleRoutes);
+app.use('/api/lists', listRoutes);
 
 // Basic health check route
 app.get('/api/health', (req, res) => {

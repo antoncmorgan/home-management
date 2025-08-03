@@ -113,4 +113,27 @@ export async function initDb(filename?: string) {
     FOREIGN KEY(family_id) REFERENCES families(id) ON DELETE CASCADE,
     FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
   )`);
+  // Lists table (generic for food, freezer, grocery)
+  await db.run(`CREATE TABLE IF NOT EXISTS lists (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    family_id TEXT NOT NULL,
+    user_id INTEGER NOT NULL,
+    type TEXT NOT NULL,
+    name TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(family_id) REFERENCES families(id) ON DELETE CASCADE,
+    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+  )`);
+
+  // List items table
+  await db.run(`CREATE TABLE IF NOT EXISTS list_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    list_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    quantity INTEGER DEFAULT 1,
+    status TEXT DEFAULT 'active',
+    notes TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(list_id) REFERENCES lists(id) ON DELETE CASCADE
+  )`);
 }
