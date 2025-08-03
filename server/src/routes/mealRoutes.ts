@@ -31,11 +31,12 @@ router.get('/:id', requireAuth, async (req, res) => {
 // POST /api/meals
 router.post('/', requireAuth, async (req, res) => {
   const { name, type, imageUrl, ingredients, cookTime, recipe, description, familyId } = req.body;
-  if (!name || !type || !ingredients || !familyId) {
-    return res.status(400).json({ error: 'name, type, ingredients, and familyId are required' });
+  const userId = (req as any).user?.id;
+  if (!name || !type || !ingredients || !familyId || !userId) {
+    return res.status(400).json({ error: 'name, type, ingredients, familyId, and userId are required' });
   }
   // Optionally, check user is a member of the family here
-  const meal = await addMeal({ name, type, imageUrl, ingredients, cookTime, recipe, description });
+  const meal = await addMeal({ name, type, imageUrl, ingredients, cookTime, recipe, description, familyId, userId });
   res.status(201).json(meal);
 });
 

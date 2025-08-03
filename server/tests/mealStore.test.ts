@@ -6,7 +6,17 @@ import { Meal } from '../src/models/meal';
 describe('Meal store helpers', () => {
   const familyId = 'fam-456';
   const userId = 1;
-  const mealData: Omit<Meal, 'id'> = { name: 'Spaghetti', type: 'dinner', description: 'Classic Italian pasta.', ingredients: ['pasta', 'tomato sauce', 'beef'] };
+  const mealData: Omit<Meal, 'id'> = {
+    name: 'Spaghetti',
+    type: 'dinner',
+    description: 'Classic Italian pasta.',
+    ingredients: ['pasta', 'tomato sauce', 'beef'],
+    imageUrl: 'https://example.com/spaghetti.jpg',
+    cookTime: 30,
+    recipe: 'Boil pasta, cook beef, mix with sauce.',
+    familyId,
+    userId
+  };
   let createdMealId: string;
 
   beforeAll(async () => {

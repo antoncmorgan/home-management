@@ -6,8 +6,8 @@ export async function addMeal(meal: Omit<Meal, 'id' | 'createdAt' | 'updatedAt'>
   const id = uuidv4();
   const now = new Date();
   await db.run(
-    'INSERT INTO meals (id, name, type, image_url, ingredients, cook_time, recipe, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime(\'now\'), datetime(\'now\'))',
-    [id, meal.name, meal.type, meal.imageUrl || null, JSON.stringify(meal.ingredients), meal.cookTime || null, meal.recipe || null, meal.description || null]
+    'INSERT INTO meals (id, name, type, image_url, ingredients, cook_time, recipe, description, family_id, user_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime(\'now\'), datetime(\'now\'))',
+    [id, meal.name, meal.type, meal.imageUrl || null, JSON.stringify(meal.ingredients), meal.cookTime || null, meal.recipe || null, meal.description || null, meal.familyId, meal.userId]
   );
   return {
     ...meal,
@@ -29,6 +29,8 @@ export async function getMeal(id: string): Promise<Meal | null> {
     cookTime: m.cook_time,
     recipe: m.recipe,
     description: m.description,
+    familyId: m.family_id,
+    userId: m.user_id,
     createdAt: m.created_at ? new Date(m.created_at) : undefined,
     updatedAt: m.updated_at ? new Date(m.updated_at) : undefined,
   };
@@ -36,13 +38,12 @@ export async function getMeal(id: string): Promise<Meal | null> {
 
 // Get meals for a family, optionally filtered by memberId
 export async function getMealsForFamily(familyId: string, memberId?: string): Promise<Meal[]> {
-  let sql = 'SELECT * FROM meals WHERE id IN (SELECT meal_id FROM meal_plans WHERE family_id = ?';
+  let sql = 'SELECT * FROM meals WHERE family_id = ?';
   const params: any[] = [familyId];
   if (memberId) {
-    sql += ' AND member_id = ?';
+    sql += ' AND id IN (SELECT meal_id FROM meal_plans WHERE member_id = ?)';
     params.push(memberId);
   }
-  sql += ')';
   const rows = await db.all(sql, params);
   return rows.map((m: any) => ({
     id: m.id,
@@ -53,6 +54,8 @@ export async function getMealsForFamily(familyId: string, memberId?: string): Pr
     cookTime: m.cook_time,
     recipe: m.recipe,
     description: m.description,
+    familyId: m.family_id,
+    userId: m.user_id,
     createdAt: m.created_at ? new Date(m.created_at) : undefined,
     updatedAt: m.updated_at ? new Date(m.updated_at) : undefined,
   }));
@@ -61,6 +64,14 @@ export async function getMealsForFamily(familyId: string, memberId?: string): Pr
 export async function updateMeal(id: string, updates: Partial<Omit<Meal, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Meal | null> {
   const fields: string[] = [];
   const values: any[] = [];
+  if (updates.familyId !== undefined) {
+    fields.push('family_id = ?');
+    values.push(updates.familyId);
+  }
+  if (updates.userId !== undefined) {
+    fields.push('user_id = ?');
+    values.push(updates.userId);
+  }
   if (updates.name !== undefined) {
     fields.push('name = ?');
     values.push(updates.name);

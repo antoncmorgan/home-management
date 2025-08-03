@@ -44,31 +44,46 @@ describe('Meal API routes', () => {
   });
 
   it('should get all meals for a family via GET', async () => {
-    await addMeal({ ...mealData, type: 'dinner' as const });
+    // Create meal via API
+    await request(app)
+      .post('/api/meals')
+      .send(mealData)
+      .expect(201);
     const res = await request(app)
       .get(`/api/meals?familyId=${familyId}`)
       .expect(200);
     expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body.length).toBeGreaterThan(0);
     expect(res.body[0].name).toBe('Spaghetti');
   });
 
   it('should update a meal via PUT', async () => {
-    const meal = await addMeal({ ...mealData, type: 'dinner' as const });
+    // Create meal via API
+    const createRes = await request(app)
+      .post('/api/meals')
+      .send(mealData)
+      .expect(201);
+    const mealId = createRes.body.id;
     const res = await request(app)
-      .put(`/api/meals/${meal.id}?familyId=${familyId}`)
+      .put(`/api/meals/${mealId}?familyId=${familyId}`)
       .send({ name: 'Spaghetti Bolognese' })
       .expect(200);
     expect(res.body.name).toBe('Spaghetti Bolognese');
   });
 
   it('should delete a meal via DELETE', async () => {
-    const meal = await addMeal({ ...mealData, type: 'dinner' as const });
+    // Create meal via API
+    const createRes = await request(app)
+      .post('/api/meals')
+      .send(mealData)
+      .expect(201);
+    const mealId = createRes.body.id;
     await request(app)
-      .delete(`/api/meals/${meal.id}?familyId=${familyId}`)
+      .delete(`/api/meals/${mealId}?familyId=${familyId}`)
       .expect(204);
     const res = await request(app)
       .get(`/api/meals?familyId=${familyId}`);
-    const found = res.body.find((m: any) => m.id === meal.id);
+    const found = res.body.find((m: any) => m.id === mealId);
     expect(found).toBeUndefined();
   });
 

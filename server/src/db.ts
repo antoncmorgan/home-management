@@ -106,7 +106,11 @@ export async function initDb(filename?: string) {
     cook_time INTEGER,
     recipe TEXT,
     description TEXT,
+    family_id TEXT NOT NULL,
+    user_id INTEGER NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(family_id) REFERENCES families(id) ON DELETE CASCADE,
+    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
   )`);
 }

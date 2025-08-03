@@ -8,6 +8,8 @@ export interface Meal {
   ingredients: string[];
   cookTime?: number;
   recipe?: string;
+  familyId: string;
+  userId: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
