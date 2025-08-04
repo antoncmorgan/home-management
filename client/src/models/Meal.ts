@@ -9,7 +9,7 @@ export interface Meal {
   cookTime?: number;
   recipe?: string;
   familyId: string;
-  userId: number;
+  userId?: number;
   createdAt?: Date;
   updatedAt?: Date;
 }

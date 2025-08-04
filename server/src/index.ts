@@ -11,7 +11,8 @@ import familyMemberRoutes from './routes/familyMemberRoutes';
 import googleRoutes from './routes/googleRoutes';
 import familyRoutes from './routes/familyRoutes';
 import listRoutes from './routes/listRoutes';
-
+import mealRoutes from './routes/mealRoutes';
+import mealPlanRoutes from './routes/mealPlanRoutes';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -38,6 +39,8 @@ app.use('/api/family-members', familyMemberRoutes);
 app.use('/api/families', familyRoutes);
 app.use('/api/google', googleRoutes);
 app.use('/api/lists', listRoutes);
+app.use('/api/meals', mealRoutes);
+app.use('/api/meal-plans', mealPlanRoutes);
 
 // Basic health check route
 app.get('/api/health', (req, res) => {

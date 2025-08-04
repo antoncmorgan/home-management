@@ -1,5 +1,6 @@
 <template>
   <div class="meal-plan-calendar-container">
+    <AddMealPlanModal v-model:show="showAddMealPlanModal" />
     <n-space  align="center" class="week-header">
       <n-button tertiary @click="goToPrevWeek">&#8592; Prev</n-button>
       <n-button tertiary @click="goToNextWeek">Next &#8594;</n-button>
@@ -32,8 +33,10 @@
 </template>
 
 <script setup lang="ts">
-import { mockMeals, mockMealPlans, mockFamilyMembers } from '../models/MockMealData';
-import { NTable, NButton, NSpace, NDivider, NText } from 'naive-ui';
+import { fetchMeals, addMealPlan, fetchMeals as fetchAllMeals, fetchMealPlans } from '../api/mealPlanApi';
+import { useFamilyMemberStore } from '../store/familyMemberStore';
+import { NTable, NButton, NSpace, NText } from 'naive-ui';
+import AddMealPlanModal from './AddMealPlanModal.vue';
 
 
 type MealType = 'lunch' | 'dinner';
@@ -42,8 +45,32 @@ type DayType = 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Fri
 const days: DayType[] = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const meals: MealType[] = ['lunch', 'dinner'];
 
-import { ref, computed } from 'vue';
+// Real meal plan data
+import { ref, computed, onMounted } from 'vue';
+const mealPlans = ref<any[]>([]);
+const allMeals = ref<any[]>([]);
+const familyMemberStore = useFamilyMemberStore();
+
+async function loadData() {
+  try {
+    await familyMemberStore.loadFamilyMembers();
+    // Fetch meal plans for the first family (or adjust as needed)
+    const familyId = familyMemberStore.familyMembers[0]?.familyId;
+    if (familyId) {
+      mealPlans.value = await fetchMealPlans(familyId);
+      // Optionally, fetch all meals for display
+      allMeals.value = await fetchMeals(familyId);
+    }
+    console.log('Meal plans loaded:', mealPlans.value);
+    console.log('All meals loaded:', allMeals.value);
+  } catch (err) {
+    console.error('Error loading meal plan calendar data:', err);
+  }
+}
+onMounted(loadData);
+
 const weekOffset = ref(0); // 0 = current week
+const showAddMealPlanModal = ref(false);
 
 const weekStartDate = computed(() => {
   const today = new Date();
@@ -72,12 +99,12 @@ function getMealEventsForDay(day: DayType, meal: MealType) {
   const date = new Date(startOfWeek);
   date.setDate(startOfWeek.getDate() + dayIndex);
   const isoDate = date.toISOString().split('T')[0];
-  const plans = mockMealPlans.filter(mp => mp.date === isoDate && mp.type === meal);
+  const plans = mealPlans.value.filter(mp => mp.date === isoDate && mp.type === meal);
   return plans.map(plan => {
-    const mealObj = mockMeals.find(m => m.id === plan.mealId);
+    const mealObj = allMeals.value.find((m: any) => m.id === plan.mealId);
     let color = '';
     if (meal === 'lunch' && plan.memberId) {
-      const member = mockFamilyMembers.find(m => m.id === plan.memberId);
+      const member = familyMemberStore.familyMembers.find((m: any) => m.id === plan.memberId);
       color = member && member.color ? member.color : '#4fc3f7';
     } else {
       color = '#f7b267';
@@ -91,7 +118,7 @@ function getMealEventsForDay(day: DayType, meal: MealType) {
 }
 
 function onAddMeal(day: DayType, meal: MealType) {
-  alert(`Add meal for ${meal} on ${day}`);
+  showAddMealPlanModal.value = true;
 }
 
 </script>
