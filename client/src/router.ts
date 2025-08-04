@@ -4,6 +4,7 @@ import HomeView from './views/Home.vue';
 import ProfileView from './views/Profile.vue';
 
 import WeatherView from './views/Weather.vue';
+import MealPlans from './views/MealPlan.vue';
 
 import { useAuthStore } from './store/authStore';
 import { apiGet } from './api/api';
@@ -23,7 +24,7 @@ const routes: Array<RouteRecordRaw> = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/meals', name: 'meals', component: HomeView,
+    path: '/meals', name: 'meals', component: MealPlans,
     meta: { requiresAuth: true }
   },
   {
