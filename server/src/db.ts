@@ -85,24 +85,22 @@ export async function initDb(filename?: string) {
     id TEXT PRIMARY KEY,
     user_id INTEGER NOT NULL,
     date TEXT NOT NULL,
-    meal_id TEXT NOT NULL,
     family_id TEXT NOT NULL,
     member_id TEXT,
-    type TEXT NOT NULL,
+    time_of_day TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY(family_id) REFERENCES families(id) ON DELETE CASCADE,
-    FOREIGN KEY(meal_id) REFERENCES meals(id) ON DELETE CASCADE,
     FOREIGN KEY(member_id) REFERENCES family_members(id) ON DELETE SET NULL
   )`);
 
-  await db.run(`CREATE TABLE IF NOT EXISTS meals (
+  await db.run(`CREATE TABLE IF NOT EXISTS dishes (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     family_id TEXT NOT NULL,
     user_id INTEGER NOT NULL,
-    type TEXT,
+    dish_type TEXT NOT NULL,
     image_url TEXT,
     ingredients TEXT,
     cook_time INTEGER,
@@ -112,6 +110,38 @@ export async function initDb(filename?: string) {
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(family_id) REFERENCES families(id) ON DELETE CASCADE,
     FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+  )`);
+
+  await db.run(`CREATE TABLE IF NOT EXISTS food_items (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    category TEXT,
+    quantity INTEGER,
+    notes TEXT,
+    family_id TEXT NOT NULL,
+    user_id INTEGER NOT NULL,
+    FOREIGN KEY(family_id) REFERENCES families(id) ON DELETE CASCADE,
+    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+  )`);
+
+  await db.run(`CREATE TABLE IF NOT EXISTS meal_plan_dishes (
+    id TEXT PRIMARY KEY,
+    meal_plan_id TEXT NOT NULL,
+    dish_id TEXT NOT NULL,
+    FOREIGN KEY(meal_plan_id) REFERENCES meal_plans(id) ON DELETE CASCADE,
+    FOREIGN KEY(dish_id) REFERENCES dishes(id) ON DELETE CASCADE
+  )`);
+
+  await db.run(`CREATE TABLE IF NOT EXISTS meal_plan_food_items (
+    id TEXT PRIMARY KEY,
+    meal_plan_id TEXT NOT NULL,
+    food_item_id TEXT NOT NULL,
+    family_member_id TEXT,
+    quantity INTEGER,
+    notes TEXT,
+    FOREIGN KEY(meal_plan_id) REFERENCES meal_plans(id) ON DELETE CASCADE,
+    FOREIGN KEY(food_item_id) REFERENCES food_items(id) ON DELETE CASCADE,
+    FOREIGN KEY(family_member_id) REFERENCES family_members(id) ON DELETE SET NULL
   )`);
   // Lists table (generic for food, freezer, grocery)
   await db.run(`CREATE TABLE IF NOT EXISTS lists (

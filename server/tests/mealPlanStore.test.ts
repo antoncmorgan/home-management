@@ -4,10 +4,9 @@ import { MealPlan } from '../src/models/mealPlan';
 
 describe('MealPlan store helpers', () => {
   const familyId = 'fam-456';
-  const mealId = 'meal-789';
   const memberId = 'mem-101';
   const userId = 1;
-  const planData: Omit<MealPlan, 'id'> = { date: '2025-08-01', mealId, familyId, memberId, userId, type: 'dinner' };
+  const planData: Omit<MealPlan, 'id'> = { date: '2025-08-01', familyId, memberId, userId, timeOfDay: 'dinner' };
   let createdPlanId: string;
 
   beforeAll(async () => {
@@ -25,20 +24,20 @@ describe('MealPlan store helpers', () => {
     const plan = await addMealPlan(planData);
     expect(plan.id).toBeDefined();
     expect(plan.familyId).toBe(familyId);
-    expect(plan.mealId).toBe(mealId);
+    expect(plan.timeOfDay).toBe('dinner');
     createdPlanId = plan.id;
   });
 
   it('should get all meal plans for a family', async () => {
     await addMealPlan(planData);
-    await addMealPlan({ ...planData, date: '2025-08-02', type: 'lunch', mealId, familyId, memberId, userId });
+    await addMealPlan({ ...planData, date: '2025-08-02', timeOfDay: 'lunch' });
     const plans = await getMealPlansByFamily(familyId);
     expect(plans.length).toBeGreaterThanOrEqual(2);
     expect(plans[0].familyId).toBe(familyId);
   });
 
   it('should get meal plans for a family and date', async () => {
-    await addMealPlan({ ...planData, date: '2025-08-03', mealId, familyId, memberId, userId, type: planData.type });
+    await addMealPlan({ ...planData, date: '2025-08-03', timeOfDay: 'dinner' });
     const plans = await getMealPlansByFamilyAndDate(familyId, '2025-08-03');
     expect(plans.length).toBeGreaterThanOrEqual(1);
     expect(plans[0].date).toBe('2025-08-03');
@@ -46,9 +45,9 @@ describe('MealPlan store helpers', () => {
 
   it('should update a meal plan', async () => {
     const plan = await addMealPlan(planData);
-    const updated = await updateMealPlan(plan.id, { type: 'lunch' });
+    const updated = await updateMealPlan(plan.id, { timeOfDay: 'lunch' });
     expect(updated).not.toBeNull();
-    expect(updated!.type).toBe('lunch');
+    expect(updated!.timeOfDay).toBe('lunch');
   });
 
   it('should delete a meal plan', async () => {

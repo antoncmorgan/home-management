@@ -8,45 +8,48 @@ This epic introduces a comprehensive meal planning feature for the home manageme
 
 ## Meal Plan Backend Checklist
 
-- [x] Create `meals` table in the database (name, type, image, ingredients, cook time, recipe, etc.)
-- [x] Create `meal_plans` table to link meals to dates, family, and members (dinner/lunch, who, when)
-- [x] Implement CRUD functions for meals and meal plans in the DB module
-- [x] Implement async helpers for DB-backed CRUD for meals and meal plans
-- [x] Implement API endpoints for meals and meal plans (GET, POST, PUT, DELETE)
-- [x] Add existence checks for update and delete routes
-- [x] Map DB results from snake_case to camelCase in API responses
-- [x] Write and update tests for DB-backed helpers and routes
-- [x] Ensure proper error handling and status codes in all endpoints
+- [ ] Rename `meals` table and model to `dishes` (add `dishType` for entree/side/dessert/other, and `timeOfDay` for breakfast/lunch/dinner)
+- [ ] Create `food_items` table/model for all individual food items
+- [ ] Update `meal_plans` table to remove direct meal references
+- [ ] Create `meal_plan_dishes` join table to associate multiple dishes with a meal plan
+- [ ] Create `meal_plan_food_items` join table to associate food items (including packed items for members) with a meal plan
+- [ ] Implement CRUD functions for dishes, food items, meal plans, and join tables in the DB module
+- [ ] Implement async helpers for DB-backed CRUD for dishes, food items, meal plans, and join tables
+- [ ] Implement API endpoints for dishes, food items, meal plans, and join tables (GET, POST, PUT, DELETE)
+- [ ] Add existence checks for update and delete routes
+- [ ] Map DB results from snake_case to camelCase in API responses
+- [ ] Write and update tests for DB-backed helpers and routes
+- [ ] Ensure proper error handling and status codes in all endpoints
 - [ ] Permission checks:
-  - [ ] Check family membership before allowing access to meal plans
+  - [ ] Check family membership before allowing access to meal plans and related data
   - [ ] Return 403 if user is not a member
   - [ ] Apply checks to all sensitive routes (GET, POST, PUT, DELETE)
 
 ## List Backend Checklist
 
-- [ ] Create a generic `lists` table (with type: food, freezer, grocery) and `list_items` table (item details, quantity, status, etc.) to support all list types
-- [ ] Implement CRUD functions for lists and list items in the DB module
-- [ ] Implement async helpers for DB-backed CRUD for lists and list items
-- [ ] Implement API endpoints for lists and list items (GET, POST, PUT, DELETE)
-- [ ] Permission checks:
-  - [ ] Check family membership before allowing access to lists
-  - [ ] Return 403 if user is not a member
-  - [ ] Apply checks to all sensitive routes (GET, POST, PUT, DELETE)
+ - [x] Create a generic `lists` table (with type: food, freezer, grocery) and `list_items` table (item details, quantity, status, etc.) to support all list types
+ - [x] Implement CRUD functions for lists and list items in the DB module
+ - [x] Implement async helpers for DB-backed CRUD for lists and list items
+ - [x] Implement API endpoints for lists and list items (GET, POST, PUT, DELETE)
+ - [x] Permission checks:
+   - [x] Check family membership before allowing access to lists (owner check for list items implemented)
+   - [x] Return 403 if user is not a member (owner check for list items implemented)
+   - [x] Apply checks to all sensitive routes (GET, POST, PUT, DELETE) (for list items)
 
 ---
 
 ## Frontend Tasks
 
-1. Create models/interfaces for Meal, MealPlan, List (with type), and ListItem (used for food, freezer, and grocery lists) in the client.
-2. Build a meal planner view (calendar/grid for dinner/lunch planning).
-3. Build a docked (right-side) meal detail view:
-   - Shows image, ingredients, cook time, and recipe.
-4. Build distinct views/components for Available Ingredients, Freezer, and Grocery List, each representing a concept in the UI but all managed using the generic list model.
-5. Implement add/edit forms for meals, lists, and list items.
-6. Fetch and manage meals, meal plans, lists, and list items state.
-7. Integrate API calls for fetching, adding, editing, and deleting meals, plans, lists, and list items.
-8. Ensure authenticated user info is managed separately from meal planning data.
-9. Add visual indicators for meal type (dinner/lunch) and assigned family member(s).
+ - [ ] Create models/interfaces for Meal, MealPlan, List (with type), and ListItem (used for food, freezer, and grocery lists) in the client.
+ - [ ] Build a meal planner view (calendar/grid for dinner/lunch planning).
+ - [ ] Build a collapsible docked (right-side) meal detail view:
+     - Shows image, ingredients, cook time, and recipe.
+ - [ ] Build distinct views/components for Available Ingredients, Freezer, and Grocery List, each representing a concept in the UI but all managed using the generic list model.
+ - [ ] Implement add/edit forms for meals, lists, and list items.
+ - [ ] Fetch and manage meals, meal plans, lists, and list items state.
+ - [ ] Integrate API calls for fetching, adding, editing, and deleting meals, plans, lists, and list items.
+ - [ ] Ensure authenticated user info is managed separately from meal planning data.
+ - [ ] Add visual indicators for meal type (dinner/lunch) and assigned family member(s).
 
 ---
 

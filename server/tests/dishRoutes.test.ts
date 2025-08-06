@@ -1,12 +1,11 @@
 import request from 'supertest';
 import express from 'express';
-import mealRoutes from '../src/routes/mealRoutes';
+import dishRoutes from '../src/routes/dishRoutes';
 import { initDb, db } from '../src/db';
-import { addMeal } from '../src/store/mealStore';
 
 const app = express();
 app.use(express.json());
-app.use('/api/meals', mealRoutes);
+app.use('/api/dishes', dishRoutes);
 
 const userId = 1;
 
@@ -18,10 +17,10 @@ jest.mock('../src/routes/requireAuth', () => ({
   }
 }));
 
-describe('Meal API routes', () => {
+describe('Dish API routes', () => {
   const familyId = 'fam-456';
-  const mealData = { name: 'Spaghetti', familyId, userId, type: 'dinner' as const, description: 'Classic Italian pasta.', ingredients: ['pasta', 'tomato sauce', 'beef'] };
-  let createdMealId: string;
+  const dishData = { name: 'Spaghetti', familyId, userId, dishType: 'entree' as const, description: 'Classic Italian pasta.', ingredients: ['pasta', 'tomato sauce', 'beef'] };
+  let createdDishId: string;
 
   beforeAll(async () => {
     await initDb(':memory:');
@@ -33,63 +32,63 @@ describe('Meal API routes', () => {
     }
   });
 
-  it('should create a new meal via POST', async () => {
+  it('should create a new dish via POST', async () => {
     const res = await request(app)
-      .post('/api/meals')
-      .send(mealData)
+      .post('/api/dishes')
+      .send(dishData)
       .expect(201);
     expect(res.body.id).toBeDefined();
     expect(res.body.name).toBe('Spaghetti');
-    createdMealId = res.body.id;
+    createdDishId = res.body.id;
   });
 
-  it('should get all meals for a family via GET', async () => {
-    // Create meal via API
+  it('should get all dishes for a family via GET', async () => {
+    // Create dish via API
     await request(app)
-      .post('/api/meals')
-      .send(mealData)
+      .post('/api/dishes')
+      .send(dishData)
       .expect(201);
     const res = await request(app)
-      .get(`/api/meals?familyId=${familyId}`)
+      .get(`/api/dishes?familyId=${familyId}`)
       .expect(200);
     expect(Array.isArray(res.body)).toBe(true);
     expect(res.body.length).toBeGreaterThan(0);
     expect(res.body[0].name).toBe('Spaghetti');
   });
 
-  it('should update a meal via PUT', async () => {
-    // Create meal via API
+  it('should update a dish via PUT', async () => {
+    // Create dish via API
     const createRes = await request(app)
-      .post('/api/meals')
-      .send(mealData)
+      .post('/api/dishes')
+      .send(dishData)
       .expect(201);
-    const mealId = createRes.body.id;
+    const dishId = createRes.body.id;
     const res = await request(app)
-      .put(`/api/meals/${mealId}?familyId=${familyId}`)
+      .put(`/api/dishes/${dishId}?familyId=${familyId}`)
       .send({ name: 'Spaghetti Bolognese' })
       .expect(200);
     expect(res.body.name).toBe('Spaghetti Bolognese');
   });
 
-  it('should delete a meal via DELETE', async () => {
-    // Create meal via API
+  it('should delete a dish via DELETE', async () => {
+    // Create dish via API
     const createRes = await request(app)
-      .post('/api/meals')
-      .send(mealData)
+      .post('/api/dishes')
+      .send(dishData)
       .expect(201);
-    const mealId = createRes.body.id;
+    const dishId = createRes.body.id;
     await request(app)
-      .delete(`/api/meals/${mealId}?familyId=${familyId}`)
+      .delete(`/api/dishes/${dishId}?familyId=${familyId}`)
       .expect(204);
     const res = await request(app)
-      .get(`/api/meals?familyId=${familyId}`);
-    const found = res.body.find((m: any) => m.id === mealId);
+      .get(`/api/dishes?familyId=${familyId}`);
+    const found = res.body.find((d: any) => d.id === dishId);
     expect(found).toBeUndefined();
   });
 
-  it('should return 404 for non-existent meal on DELETE', async () => {
+  it('should return 404 for non-existent dish on DELETE', async () => {
     await request(app)
-      .delete(`/api/meals/non-existent-id?familyId=${familyId}`)
+      .delete(`/api/dishes/non-existent-id?familyId=${familyId}`)
       .expect(404);
   });
 });

@@ -1,13 +1,13 @@
-// Model for meals
-export interface Meal {
+// Model for dishes
+export interface Dish {
   id: string;
   name: string;
-  description?: string;
-  type: 'breakfast' | 'lunch' | 'dinner';
+  dishType: 'entree' | 'side' | 'dessert' | 'other';
   imageUrl?: string;
   ingredients: string[];
   cookTime?: number;
   recipe?: string;
+  description?: string;
   familyId: string;
   userId: number;
   createdAt?: Date;
